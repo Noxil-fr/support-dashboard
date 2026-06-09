@@ -367,11 +367,16 @@
 
 
     <div id="mtab-pin" class="mtab-pane">
-      <div><label>Nouveau code PIN (6 chiffres)</label><input type="password" id="cfg-new-pin" maxlength="6" inputmode="numeric" placeholder="••••••" style="letter-spacing:6px;font-size:16px;"></div>
-      <div><label>Confirmer</label><input type="password" id="cfg-confirm-pin" maxlength="6" inputmode="numeric" placeholder="••••••" style="letter-spacing:6px;font-size:16px;"></div>
-      <div class="alert alert-err" id="cfg-pin-err"></div>
-      <div class="alert alert-ok"  id="cfg-pin-ok">Code PIN mis à jour.</div>
-      <button class="primary" onclick="savePin()">Mettre à jour le PIN</button>
+      <div id="pin-server-notice" style="display:none;background:#1c2128;border:1px solid #30363d;border-radius:6px;padding:10px 14px;font-size:12px;color:#8b949e;margin-bottom:14px;">
+        Le PIN est géré via la variable d'environnement <strong style="color:#cdd9e5">DASHBOARD_PIN</strong> sur Render. Pour le modifier, mettez à jour cette variable dans le dashboard Render.
+      </div>
+      <div id="pin-local-form">
+        <div><label>Nouveau code PIN (6 chiffres)</label><input type="password" id="cfg-new-pin" maxlength="6" inputmode="numeric" placeholder="••••••" style="letter-spacing:6px;font-size:16px;"></div>
+        <div><label>Confirmer</label><input type="password" id="cfg-confirm-pin" maxlength="6" inputmode="numeric" placeholder="••••••" style="letter-spacing:6px;font-size:16px;"></div>
+        <div class="alert alert-err" id="cfg-pin-err"></div>
+        <div class="alert alert-ok"  id="cfg-pin-ok">Code PIN mis à jour.</div>
+        <button class="primary" onclick="savePin()">Mettre à jour le PIN</button>
+      </div>
     </div>
 
     <div class="modal-footer">
@@ -465,6 +470,9 @@
     document.getElementById('cfg-email').value     = CFG.jira_email   || '';
     document.getElementById('cfg-token').value     = CFG.jira_token   || '';
     document.getElementById('cfg-project').value   = CFG.jira_project || '';
+    const serverPin = !!CFG.dashboard_pin;
+    document.getElementById('pin-server-notice').style.display = serverPin ? 'block' : 'none';
+    document.getElementById('pin-local-form').style.display    = serverPin ? 'none'  : 'block';
     switchMTab('jira');
     document.getElementById('overlay-config').classList.remove('hidden');
   }
