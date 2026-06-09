@@ -443,13 +443,13 @@
     ok.style.display = 'block';
   }
 
-  // ── Config (stockée dans config.json côté serveur) ──────────────────────────
+  // ── Config (stockée dans localStorage) ─────────────────────────────────────
   let CFG = {};
 
   async function loadServerConfig() {
     try {
-      const res = await fetch('/api/config');
-      CFG = await res.json();
+      const saved = localStorage.getItem('app_config');
+      CFG = saved ? JSON.parse(saved) : {};
     } catch { CFG = {}; }
   }
 
@@ -471,7 +471,7 @@
       jira_token:   document.getElementById('cfg-token').value.trim(),
       jira_project: document.getElementById('cfg-project').value.trim(),
     };
-    await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(CFG) });
+    localStorage.setItem('app_config', JSON.stringify(CFG));
     updateHeaderStatus();
     closeConfig();
   }
