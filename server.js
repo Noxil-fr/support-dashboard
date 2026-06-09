@@ -35,7 +35,7 @@ app.post('/api/config', (req, res) => {
 
 // ── Jira ──────────────────────────────────────────────────────────────────────
 app.get('/api/bugs', async (req, res) => {
-  const { domain, email, token, project, period } = req.query;
+  const { domain, email, token, project, period, date_from, date_to } = req.query;
 
   if (!domain || !email || !token) {
     return res.status(400).json({ error: 'Paramètres manquants : domain, email, token.' });
@@ -62,7 +62,10 @@ app.get('/api/bugs', async (req, res) => {
     `reporter IN (${REPORTERS.join(',')})`
   ];
   if (project) conditions.push(`project = "${project}"`);
-  if (period) {
+  if (date_from) {
+    conditions.push(`created >= "${date_from}"`);
+    if (date_to) conditions.push(`created <= "${date_to}"`);
+  } else if (period) {
     const since = new Date(Date.now() - Number(period) * 24 * 60 * 60 * 1000);
     const pad = n => String(n).padStart(2, '0');
     const dateStr = `${since.getFullYear()}-${pad(since.getMonth()+1)}-${pad(since.getDate())} ${pad(since.getHours())}:${pad(since.getMinutes())}`;

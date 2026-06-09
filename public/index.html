@@ -204,13 +204,19 @@
     <!-- Filter bar -->
     <div class="filter-bar">
       <span class="filter-label">Période</span>
-      <select id="period">
+      <select id="period" onchange="toggleCustomDates()">
         <option value="">Toute</option>
         <option value="7" selected>7 jours</option>
         <option value="14">14 jours</option>
         <option value="30">30 jours</option>
         <option value="90">90 jours</option>
+        <option value="custom">Personnalisé</option>
       </select>
+      <div id="custom-dates" style="display:none;align-items:center;gap:6px">
+        <input type="date" id="date-from" style="background:#161b22;border:1px solid #21262d;border-radius:5px;color:#cdd9e5;font-size:12px;padding:4px 8px;height:28px;outline:none;">
+        <span style="font-size:12px;color:#6e7681">→</span>
+        <input type="date" id="date-to" style="background:#161b22;border:1px solid #21262d;border-radius:5px;color:#cdd9e5;font-size:12px;padding:4px 8px;height:28px;outline:none;">
+      </div>
       <div class="filter-sep"></div>
       <input type="text" id="search" placeholder="Rechercher…" oninput="render()">
       <select id="f-reporter" onchange="render()">
@@ -260,7 +266,7 @@
           <div class="tile-url">noxil-fr.github.io/db-icar</div>
         </div>
       </a>
-      <a class="tile" href="https://icarsystems.sharepoint.com/:o:/s/Equipesupport/EiGxXoEF3lBCtKodMIYBzZ4BOLENvqEfOziZyBYyrHBPSw" target="_blank">
+      <a class="tile" href="https://onenextlane.sharepoint.com/:o:/r/sites/Equipesupport/Documents%20partages/Equipe%20Support/Connexions%20clients?d=w815eb121de054250b4aa1d308601cd9e&csf=1&web=1&e=fWWNfK" target="_blank">
         <div class="tile-icon" style="background:#1a1f2e">🔗</div>
         <div class="tile-info">
           <div class="tile-name">Connexions clients</div>
@@ -487,6 +493,12 @@
   });
 
   // ── Jira ────────────────────────────────────────────────────────────────────
+  function toggleCustomDates() {
+    const custom = document.getElementById('period').value === 'custom';
+    const el = document.getElementById('custom-dates');
+    el.style.display = custom ? 'flex' : 'none';
+  }
+
   let all = [], sortCol = 'created', sortAsc = false;
 
   const ALLOWED_REPORTERS = [
@@ -537,7 +549,14 @@
     try {
       const params = new URLSearchParams({ domain, email, token });
       if (project) params.set('project', project);
-      if (period)  params.set('period', period);
+      if (period === 'custom') {
+        const from = document.getElementById('date-from').value;
+        const to   = document.getElementById('date-to').value;
+        if (from) params.set('date_from', from);
+        if (to)   params.set('date_to', to);
+      } else if (period) {
+        params.set('period', period);
+      }
 
       const res  = await fetch(`/api/bugs?${params}`);
       const data = await res.json();
