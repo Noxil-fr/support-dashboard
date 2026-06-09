@@ -448,9 +448,12 @@
 
   async function loadServerConfig() {
     try {
+      const res = await fetch('/api/config');
+      CFG = await res.json();
+    } catch {
       const saved = localStorage.getItem('app_config');
       CFG = saved ? JSON.parse(saved) : {};
-    } catch { CFG = {}; }
+    }
   }
 
   function showConfigModal() {
