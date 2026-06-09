@@ -393,8 +393,12 @@
   }
 
   // ── PIN ─────────────────────────────────────────────────────────────────────
+  function getActivePin() {
+    return CFG.dashboard_pin || localStorage.getItem('app_pin') || '';
+  }
+
   function openConfig() {
-    const pin = localStorage.getItem('app_pin');
+    const pin = getActivePin();
     if (!pin) { showConfigModal(); return; }
     clearPinInputs();
     document.getElementById('pin-err').style.display = 'none';
@@ -417,7 +421,7 @@
   }
 
   function checkPin(code) {
-    if (code === localStorage.getItem('app_pin')) {
+    if (code === getActivePin()) {
       closePin(); showConfigModal();
     } else {
       document.getElementById('pin-err').style.display = 'block';

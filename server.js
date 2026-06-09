@@ -27,10 +27,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/config', (req, res) => {
   const file = readConfig();
   res.json({
-    jira_domain:  process.env.JIRA_DOMAIN  || file.jira_domain  || '',
-    jira_email:   process.env.JIRA_EMAIL   || file.jira_email   || '',
-    jira_token:   process.env.JIRA_TOKEN   || file.jira_token   || '',
-    jira_project: process.env.JIRA_PROJECT || file.jira_project || '',
+    jira_domain:   process.env.JIRA_DOMAIN    || file.jira_domain  || '',
+    jira_email:    process.env.JIRA_EMAIL     || file.jira_email   || '',
+    jira_token:    process.env.JIRA_TOKEN     || file.jira_token   || '',
+    jira_project:  process.env.JIRA_PROJECT   || file.jira_project || '',
+    dashboard_pin: process.env.DASHBOARD_PIN  || '',
   });
 });
 
