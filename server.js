@@ -88,7 +88,7 @@ app.get('/api/bugs', async (req, res) => {
     let nextPageToken = undefined;
 
     do {
-      const body = { jql, maxResults: 100, fields: ['summary', 'priority', 'status', 'reporter', 'assignee', 'created'] };
+      const body = { jql, maxResults: 100, fields: ['summary', 'priority', 'status', 'reporter', 'assignee', 'created', 'customfield_10136'] };
       if (nextPageToken) body.nextPageToken = nextPageToken;
 
       const response = await axios.post(url, body, {

@@ -133,7 +133,7 @@
   #jira-table colgroup .col-status  { width: 160px; }
   #jira-table colgroup .col-reporter{ width: 130px; }
   #jira-table colgroup .col-date    { width: 100px; }
-  #jira-table th:nth-child(3), #jira-table td:nth-child(3) { width: 160px; text-align: center; }
+  #jira-table th:nth-child(3), #jira-table td:nth-child(3) { width: 110px; text-align: center; }
   .reporter-name { color: #e6edf3; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0; }
   .date-cell { font-size: 12px; color: #6e7681; white-space: nowrap; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; letter-spacing: .3px; border: 1px solid transparent; }
@@ -285,8 +285,9 @@
           <colgroup>
             <col style="width:110px">
             <col>
-            <col style="width:160px">
+            <col style="width:110px">
             <col style="width:165px">
+            <col style="width:110px">
             <col style="width:100px">
           </colgroup>
           <thead><tr>
@@ -294,6 +295,7 @@
             <th onclick="sort('summary')">Résumé</th>
             <th onclick="sort('status')" style="text-align:center">Statut</th>
             <th onclick="sort('reporter')">Rapporteur</th>
+            <th onclick="sort('product')">Produit</th>
             <th onclick="sort('created')">Créé le</th>
           </tr></thead>
           <tbody id="tbody"></tbody>
@@ -555,6 +557,7 @@
         summary:  i.fields.summary || '',
         status:   i.fields.status?.name || '-',
         reporter: i.fields.reporter?.displayName || '-',
+        product:  i.fields.customfield_10136?.value || '-',
         created:  i.fields.created || '',
         url:      `https://${domain}/browse/${i.key}`
       }));
@@ -590,7 +593,7 @@
 
     let list = all.filter(b =>
       ALLOWED_REPORTERS.includes(b.reporter.toLowerCase()) &&
-      (!search || b.key.toLowerCase().includes(search) || b.summary.toLowerCase().includes(search) || b.reporter.toLowerCase().includes(search)) &&
+      (!search || b.key.toLowerCase().includes(search) || b.summary.toLowerCase().includes(search) || b.reporter.toLowerCase().includes(search) || b.product.toLowerCase().includes(search)) &&
       (!fr || b.reporter === fr)
     ).sort((a, b) => {
       let va = a[sortCol] || '', vb = b[sortCol] || '';
@@ -669,6 +672,7 @@
           const dot  = pole ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${POLE_COLORS[pole].color};margin-right:6px;flex-shrink:0;vertical-align:middle"></span>` : '';
           return dot + b.reporter;
         })()}</td>
+        <td class="summary" title="${b.product}">${b.product}</td>
         <td class="date-cell">${d}</td>
       </tr>`;
     }).join('');
