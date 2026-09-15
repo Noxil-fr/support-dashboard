@@ -135,7 +135,7 @@
   #jira-table colgroup .col-status  { width: 160px; }
   #jira-table colgroup .col-reporter{ width: 130px; }
   #jira-table colgroup .col-date    { width: 100px; }
-  #jira-table th:nth-child(4), #jira-table td:nth-child(4) { text-align: center; }
+  #jira-table .col-status { text-align: center; }
   .reporter-name { color: #e6edf3; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0; }
   .date-cell { font-size: 12px; color: #adbac7; white-space: nowrap; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; letter-spacing: .3px; border: 1px solid transparent; }
@@ -282,25 +282,15 @@
       <div class="table-area">
         <div class="empty-state" id="jira-empty" style="display:none">Aucun bug trouvé.</div>
         <table id="jira-table">
-          <colgroup>
-            <col style="width:100px">
-            <col style="width:108px">
-            <col>
-            <col style="width:155px">
-            <col style="width:150px">
-            <col style="width:150px">
-            <col style="width:110px">
-            <col style="width:185px">
-          </colgroup>
           <thead><tr>
-            <th class="col-created" onclick="sort('created')">Créé le</th>
-            <th class="col-key" onclick="sort('key')">N°</th>
+            <th class="col-created" onclick="sort('created')" style="width:100px">Créé le</th>
+            <th class="col-key" onclick="sort('key')" style="width:108px">N°</th>
             <th class="col-summary" onclick="sort('summary')">Résumé</th>
-            <th class="col-status" onclick="sort('status')" style="text-align:center">Statut</th>
-            <th class="col-reporter" onclick="sort('reporter')">Rapporteur</th>
-            <th class="col-assignee" onclick="sort('assignee')">Assigné</th>
-            <th class="col-product" onclick="sort('product')">Produit</th>
-            <th class="col-versions" onclick="sort('versions')">Version affectée</th>
+            <th class="col-status" onclick="sort('status')" style="width:155px;text-align:center">Statut</th>
+            <th class="col-reporter" onclick="sort('reporter')" style="width:150px">Rapporteur</th>
+            <th class="col-assignee" onclick="sort('assignee')" style="width:150px">Assigné</th>
+            <th class="col-product" onclick="sort('product')" style="width:110px">Produit</th>
+            <th class="col-versions" onclick="sort('versions')" style="width:185px">Version affectée</th>
           </tr></thead>
           <tbody id="tbody"></tbody>
         </table>
