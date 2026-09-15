@@ -51,7 +51,7 @@
   .col-panel-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6e7681; padding: 2px 14px 8px; border-bottom: 1px solid #21262d; margin-bottom: 4px; }
   .col-item { display: flex; align-items: center; gap: 8px; padding: 5px 14px; cursor: pointer; transition: background .1s; }
   .col-item:hover { background: #1c2128; }
-  .col-item input[type=checkbox] { accent-color: #58a6ff; width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
+  .col-item input[type=checkbox], .col-item input[type=radio] { accent-color: #58a6ff; width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
   .col-item label { font-size: 12px; color: #cdd9e5; cursor: pointer; user-select: none; }
   .ql-sep { width: 1px; height: 18px; background: #21262d; }
   .quick-links { display: flex; align-items: center; gap: 6px; }
@@ -99,14 +99,20 @@
   .side-tab { flex: 1; padding: 7px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6e7681; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color .15s, border-color .15s, background .15s; }
   .side-tab.active { color: #cdd9e5; background: #161b22; border-bottom-color: #58a6ff; }
   .side-tab:hover:not(.active) { color: #8b949e; background: #0f1318; }
-  .side-pane { display: none; flex: 1; flex-direction: column; overflow-y: auto; gap: 1px; }
+  #side-tab-techs    { color: #5b93c4; }
+  #side-tab-versions { color: #5bb98c; }
+  #side-tab-techs.active    { color: #79c0ff; background: #0d2a45; border-bottom-color: #58a6ff; }
+  #side-tab-versions.active { color: #7ee8a2; background: #0a2d1a; border-bottom-color: #3fb950; }
+  .side-pane { display: none; flex: 1; flex-direction: column; overflow-y: auto; background: #161b22; }
   .side-pane.active { display: flex; }
   .ver-row { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid #21262d; background: #161b22; overflow: hidden; transition: background .1s; }
-  .ver-row:hover { background: #1c2128; }
-  .ver-row-bar { position: absolute; left: 0; top: 0; height: 100%; background: #58a6ff30; pointer-events: none; transition: width .3s ease; }
+  .ver-row:hover { background: #1c2128; cursor: pointer; }
+  .ver-row.selected { background: #1c3a6b; }
+  .ver-row.selected .ver-row-name { color: #58a6ff; font-weight: 700; }
+  .ver-row-bar { position: absolute; left: 0; top: 0; height: 100%; background: #3fb95030; pointer-events: none; transition: width .3s ease; }
   .ver-row-name { flex: 1; font-size: 12px; color: #cdd9e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; }
   .ver-row-count { font-size: 12px; font-weight: 700; color: #e6edf3; flex-shrink: 0; z-index: 1; }
-  .ver-group-header { padding: 6px 14px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #8b949e; background: #0d1117; border-bottom: 1px solid #21262d; position: sticky; top: 0; z-index: 1; }
+  .ver-group-header { padding: 6px 14px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #8b949e; background: #0d1117; border-bottom: 1px solid #21262d; position: sticky; top: 0; z-index: 2; }
   .ver-empty { padding: 24px 14px; font-size: 12px; color: #6e7681; text-align: center; background: #161b22; }
   #tab-jira .stats-side .stat { border-left-width: 3px; border-left-style: solid; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   #tab-jira .stats-side .stat-lbl { order: -1; flex: 1; font-size: 12px; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: .4px; margin: 0; }
@@ -117,8 +123,10 @@
   .tech-section { border-bottom: 1px solid #30363d; margin-bottom: 1px; }
   .tech-row { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid #21262d; overflow: hidden; transition: background .1s; }
   .tech-row:last-child { border-bottom: none; }
-  .tech-row:hover { background: #1c2128; }
-  .tech-row-bar { position: absolute; left: 0; top: 0; height: 100%; background: #1f6feb18; pointer-events: none; transition: width .3s ease; }
+  .tech-row:hover { background: #1c2128; cursor: pointer; }
+  .tech-row.selected { background: #1c3a6b; }
+  .tech-row.selected .tech-row-name { color: #58a6ff; font-weight: 700; }
+  .tech-row-bar { position: absolute; left: 0; top: 0; height: 100%; background: #58a6ff30; pointer-events: none; transition: width .3s ease; }
   .tech-avatar { width: 26px; height: 26px; border-radius: 50%; background: #1f3a5f; color: #58a6ff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; }
   .tech-row-name { font-size: 12px; color: #cdd9e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; z-index: 1; }
   .tech-row-count { font-size: 12px; font-weight: 700; color: #e6edf3; flex-shrink: 0; z-index: 1; }
@@ -226,6 +234,7 @@
         <option value="14">14 jours</option>
         <option value="30">30 jours</option>
         <option value="90">90 jours</option>
+        <option value="year">Cette année</option>
         <option value="custom">Personnalisé</option>
       </select>
       <div id="custom-dates" style="display:none;align-items:center;gap:6px">
@@ -238,11 +247,13 @@
       <select id="f-reporter" onchange="render()">
         <option value="">Tous rapporteurs</option>
       </select>
+      <select id="f-version" onchange="render()">
+        <option value="">Toutes versions</option>
+      </select>
       <button class="load-btn" id="jira-btn" onclick="loadBugs()">Charger</button>
       <div style="position:relative">
-        <button class="load-btn" onclick="toggleColPanel()" id="col-btn" style="background:#1e1232;border:1px solid #5c3a9a;white-space:nowrap">Ajouter/supprimer des colonnes</button>
+        <button class="load-btn" onclick="toggleColPanel()" id="col-btn" style="background:#1e1232;border:1px solid #5c3a9a;white-space:nowrap">⚗ Filtre</button>
         <div id="col-panel" class="col-panel hidden">
-          <div class="col-panel-title">Colonnes visibles</div>
         </div>
       </div>
       <div class="filter-sep"></div>
@@ -314,8 +325,8 @@
             <th class="col-status" onclick="sort('status')" style="width:155px;text-align:center">Statut</th>
             <th class="col-reporter" onclick="sort('reporter')" style="width:150px">Rapporteur</th>
             <th class="col-assignee" onclick="sort('assignee')" style="width:150px">Assigné</th>
-            <th class="col-product" onclick="sort('product')" style="width:110px">Produit</th>
-            <th class="col-versions" onclick="sort('versions')" style="width:185px">Version affectée</th>
+            <th class="col-product" onclick="sort('product')" style="width:121px">Produit</th>
+            <th class="col-versions" onclick="sort('versions')" style="width:167px">Version affectée</th>
           </tr></thead>
           <tbody id="tbody"></tbody>
         </table>
@@ -508,8 +519,8 @@
     { id: 'status',   label: 'Statut',           width: '155px' },
     { id: 'reporter', label: 'Rapporteur',       width: '150px' },
     { id: 'assignee', label: 'Assigné',          width: '150px' },
-    { id: 'product',  label: 'Produit',          width: '110px' },
-    { id: 'versions', label: 'Version affectée', width: '185px' },
+    { id: 'product',  label: 'Produit',          width: '121px' },
+    { id: 'versions', label: 'Version affectée', width: '167px' },
   ];
 
   function loadColPrefs() {
@@ -573,7 +584,25 @@
         <label for="chk-${c.id}">${c.label}</label>
       </div>`;
     }).join('');
-    panel.innerHTML = `<div class="col-panel-title">Colonnes visibles</div>${items}`;
+    panel.innerHTML = `
+      <div class="col-panel-title">Portée</div>
+      <div class="col-item">
+        <input type="radio" name="scope" id="scope-team" ${reporterScope === 'team' ? 'checked' : ''} onchange="setReporterScope('team')">
+        <label for="scope-team">Support I'CAR DMS</label>
+      </div>
+      <div class="col-item">
+        <input type="radio" name="scope" id="scope-all" ${reporterScope === 'all' ? 'checked' : ''} onchange="setReporterScope('all')">
+        <label for="scope-all">Tous les rapporteurs</label>
+      </div>
+      <div class="col-panel-title" style="margin-top:8px">Colonnes visibles</div>
+      ${items}`;
+  }
+
+  function setReporterScope(scope) {
+    if (reporterScope === scope) return;
+    reporterScope = scope;
+    localStorage.setItem('reporter_scope', scope);
+    if (CFG.jira_domain && CFG.jira_token) loadBugs();
   }
 
   function toggleColVisibility(id, visible) {
@@ -598,6 +627,19 @@
   }
 
   let all = [], sortCol = 'created', sortAsc = false;
+  let reporterScope = localStorage.getItem('reporter_scope') || 'team';
+
+  function filterByVersion(name) {
+    const sel = document.getElementById('f-version');
+    sel.value = (sel.value === name) ? '' : name;
+    render();
+  }
+
+  function filterByTech(name) {
+    const sel = document.getElementById('f-reporter');
+    sel.value = (sel.value === name) ? '' : name;
+    render();
+  }
 
   const ALLOWED_REPORTERS = [
     'Fabrice CIROT','Christophe MORLEGHEM','Sophie DUPONT','Jeyson ADELLE',
@@ -627,6 +669,36 @@
     'Compta':{ bg: '#2d1117', color: '#f85149' },
   };
 
+  const GROUP_ORDER = ['ICAR', 'ICOM', 'DMS Gateway', 'Autre'];
+  const groupOf = v => {
+    if (v.startsWith('ICAR'))        return 'ICAR';
+    if (v.startsWith('ICOM'))        return 'ICOM';
+    if (v.startsWith('DMS Gateway')) return 'DMS Gateway';
+    return 'Autre';
+  };
+  const parseVer = s => s.replace(/^[^\d]*/, '').split('.').map(p => { const n = parseInt(p, 10); return isNaN(n) ? p.toLowerCase() : n; });
+  const cmpVer = (a, b) => { const pa = parseVer(a), pb = parseVer(b); for (let i = 0; i < Math.max(pa.length, pb.length); i++) { const va = pa[i] ?? 0, vb = pb[i] ?? 0; if (va < vb) return -1; if (va > vb) return 1; } return 0; };
+
+  function buildVersionOptions() {
+    const groups = {};
+    all.forEach(b => {
+      const vers = b.versions && b.versions !== '-' ? b.versions.split(', ') : ['Sans version'];
+      vers.forEach(v => {
+        const t = v.trim();
+        const g = groupOf(t);
+        (groups[g] ||= new Set()).add(t);
+      });
+    });
+    const sel = document.getElementById('f-version');
+    sel.innerHTML = '<option value="">Toutes versions</option>' + GROUP_ORDER
+      .filter(g => groups[g]?.size)
+      .map(g => {
+        const opts = [...groups[g]].sort((a, b) => a === 'Sans version' ? 1 : b === 'Sans version' ? -1 : cmpVer(b, a))
+          .map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+        return `<optgroup label="${g}">${opts}</optgroup>`;
+      }).join('');
+  }
+
   async function loadBugs() {
     const domain  = CFG.jira_domain  || '';
     const email   = CFG.jira_email   || '';
@@ -647,11 +719,14 @@
     try {
       const params = new URLSearchParams({ domain, email, token });
       if (project) params.set('project', project);
+      if (reporterScope === 'all') params.set('all_reporters', 'true');
       if (period === 'custom') {
         const from = document.getElementById('date-from').value;
         const to   = document.getElementById('date-to').value;
         if (from) params.set('date_from', from);
         if (to)   params.set('date_to', to);
+      } else if (period === 'year') {
+        params.set('date_from', `${new Date().getFullYear()}-01-01`);
       } else if (period) {
         params.set('period', period);
       }
@@ -677,10 +752,11 @@
       console.log('Rapporteurs Jira disponibles :', uniqueReporters);
 
       const presentReporters = [...new Set(all.map(b => b.reporter).filter(r => r !== '-'))];
-      const reporters = presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase())).sort();
+      const reporters = (reporterScope === 'all' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
       const sel = document.getElementById('f-reporter');
       sel.innerHTML = '<option value="">Tous rapporteurs</option>'
         + reporters.map(r => `<option value="${r}">${r}</option>`).join('');
+      buildVersionOptions();
 
       document.getElementById('jira-stats').style.display = 'flex';
       document.getElementById('jira-stats').style.flexDirection = 'row-reverse';
@@ -700,12 +776,23 @@
   function render() {
     const search = document.getElementById('search').value.toLowerCase();
     const fr     = document.getElementById('f-reporter').value;
+    const vf     = document.getElementById('f-version').value;
 
-    let list = all.filter(b =>
-      ALLOWED_REPORTERS.includes(b.reporter.toLowerCase()) &&
-      (!search || b.key.toLowerCase().includes(search) || b.summary.toLowerCase().includes(search) || b.reporter.toLowerCase().includes(search) || b.product.toLowerCase().includes(search)) &&
-      (!fr || b.reporter === fr)
-    ).sort((a, b) => {
+    const matchesVersion = b => {
+      if (!vf) return true;
+      if (vf === 'Sans version') return !b.versions || b.versions === '-';
+      return !!b.versions && b.versions !== '-' && b.versions.split(', ').includes(vf);
+    };
+
+    const baseFilter = b =>
+      (reporterScope === 'all' || ALLOWED_REPORTERS.includes(b.reporter.toLowerCase())) &&
+      (!search || b.key.toLowerCase().includes(search) || b.summary.toLowerCase().includes(search) || b.reporter.toLowerCase().includes(search) || b.product.toLowerCase().includes(search));
+
+    // Listes sans l'un des deux filtres croisés (servent à garder les panneaux ACTO/Versions complets quand l'autre est sélectionné)
+    const listForVersions = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr));
+    const listForTechs    = all.filter(b => baseFilter(b) && matchesVersion(b));
+
+    let list = listForTechs.filter(b => !fr || b.reporter === fr).sort((a, b) => {
       let va = a[sortCol] || '', vb = b[sortCol] || '';
       if (sortCol === 'created') { va = new Date(va); vb = new Date(vb); }
       else { va = va.toLowerCase(); vb = vb.toLowerCase(); }
@@ -734,7 +821,7 @@
 
     // Compteur par technicien
     const techCounts = {};
-    list.forEach(b => { techCounts[b.reporter] = (techCounts[b.reporter] || 0) + 1; });
+    listForTechs.forEach(b => { techCounts[b.reporter] = (techCounts[b.reporter] || 0) + 1; });
     const techEntries = Object.entries(techCounts).sort((a, b) => b[1] - a[1]);
     const maxCount = techEntries[0]?.[1] || 1;
     document.getElementById('tech-list').innerHTML = techEntries
@@ -744,7 +831,8 @@
         const pole     = POLES[name.toLowerCase()];
         const pc       = pole ? POLE_COLORS[pole] : null;
         const poleDot = pole ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pc.color};margin-right:6px;flex-shrink:0;vertical-align:middle"></span>` : '';
-        return `<div class="tech-row">
+        const selected = fr === name ? ' selected' : '';
+        return `<div class="tech-row${selected}" data-name="${escHtml(name)}" onclick="filterByTech(this.dataset.name)">
           <div class="tech-row-bar" style="width:${barWidth}%"></div>
           <div class="tech-avatar">${initials}</div>
           <span class="tech-row-name">${poleDot}${name}</span>
@@ -752,18 +840,12 @@
         </div>`;
       }).join('');
 
-    // Compteur par version — groupé avec détail
+    // Compteur par version — groupé avec détail (indépendant du filtre de version en cours)
     const verCounts = {};
-    list.forEach(b => {
+    listForVersions.forEach(b => {
       const vers = b.versions && b.versions !== '-' ? b.versions.split(', ') : ['Sans version'];
       vers.forEach(v => { const t = v.trim(); verCounts[t] = (verCounts[t] || 0) + 1; });
     });
-    const groupOf = v => {
-      if (v.startsWith('ICAR'))        return 'ICAR';
-      if (v.startsWith('ICOM'))        return 'ICOM';
-      if (v.startsWith('DMS Gateway')) return 'DMS Gateway';
-      return 'Autre';
-    };
     const groups = {};
     Object.entries(verCounts).forEach(([name, count]) => {
       const g = groupOf(name);
@@ -771,16 +853,15 @@
       groups[g].total += count;
       groups[g].versions.push([name, count]);
     });
-    const parseVer = s => s.replace(/^[^\d]*/, '').split('.').map(p => { const n = parseInt(p, 10); return isNaN(n) ? p.toLowerCase() : n; });
-    const cmpVer = (a, b) => { const pa = parseVer(a), pb = parseVer(b); for (let i = 0; i < Math.max(pa.length, pb.length); i++) { const va = pa[i] ?? 0, vb = pb[i] ?? 0; if (va < vb) return -1; if (va > vb) return 1; } return 0; };
     Object.values(groups).forEach(g => g.versions.sort((a, b) => cmpVer(b[0], a[0])));
-    const sortedGroups = Object.entries(groups).sort((a, b) => b[1].total - a[1].total);
-    const maxVerCount = sortedGroups[0]?.[1].versions[0]?.[1] || 1;
+    const sortedGroups = Object.entries(groups).sort((a, b) => GROUP_ORDER.indexOf(a[0]) - GROUP_ORDER.indexOf(b[0]));
     document.getElementById('versions-list').innerHTML = sortedGroups.length
       ? sortedGroups.map(([gName, { versions }]) => {
+          const maxInGroup = Math.max(1, ...versions.filter(([name]) => name !== 'Sans version').map(([, c]) => c));
           const rows = versions.map(([name, count]) => {
-            const bar = Math.round(count / maxVerCount * 100);
-            return `<div class="ver-row">
+            const bar = name === 'Sans version' ? 0 : Math.round(count / maxInGroup * 100);
+            const selected = vf === name ? ' selected' : '';
+            return `<div class="ver-row${selected}" data-version="${escHtml(name)}" onclick="filterByVersion(this.dataset.version)">
               <div class="ver-row-bar" style="width:${bar}%"></div>
               <span class="ver-row-name">${escHtml(name)}</span>
               <span class="ver-row-count">${count}</span>

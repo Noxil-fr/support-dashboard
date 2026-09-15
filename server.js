@@ -48,7 +48,7 @@ app.post('/api/verify-pin', (req, res) => {
 
 // ── Jira ──────────────────────────────────────────────────────────────────────
 app.get('/api/bugs', async (req, res) => {
-  const { domain, email, token, project, period, date_from, date_to } = req.query;
+  const { domain, email, token, project, period, date_from, date_to, all_reporters } = req.query;
 
   if (!domain || !email || !token) {
     return res.status(400).json({ error: 'Paramètres manquants : domain, email, token.' });
@@ -70,10 +70,8 @@ app.get('/api/bugs', async (req, res) => {
     '712020:3e737f29-0bc6-431c-a821-9d4728579348'
   ];
 
-  const conditions = [
-    'issuetype = Bug',
-    `reporter IN (${REPORTERS.join(',')})`
-  ];
+  const conditions = ['issuetype = Bug'];
+  if (all_reporters !== 'true') conditions.push(`reporter IN (${REPORTERS.join(',')})`);
   if (project) conditions.push(`project = "${project}"`);
   if (date_from) {
     conditions.push(`created >= "${date_from}"`);
@@ -107,7 +105,7 @@ app.get('/api/bugs', async (req, res) => {
       nextPageToken = response.data.nextPageToken ?? null;
       allIssues.push(...page);
       if (!page.length) break;
-    } while (nextPageToken && allIssues.length < 3000);
+    } while (nextPageToken && allIssues.length < 10000);
 
     console.log(`Jira – total chargé : ${allIssues.length}`);
     res.json({ issues: allIssues, total: allIssues.length });
