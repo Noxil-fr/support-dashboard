@@ -46,6 +46,13 @@
   .filter-info { margin-left: auto; display: flex; align-items: center; gap: 12px; }
   .filter-count { font-size: 12px; color: #8b949e; white-space: nowrap; }
   .filter-raw { font-size: 12px; color: #3d444d; white-space: nowrap; }
+  .col-panel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 100; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 0; min-width: 190px; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+  .col-panel.hidden { display: none; }
+  .col-panel-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6e7681; padding: 2px 14px 8px; border-bottom: 1px solid #21262d; margin-bottom: 4px; }
+  .col-item { display: flex; align-items: center; gap: 8px; padding: 5px 14px; cursor: pointer; transition: background .1s; }
+  .col-item:hover { background: #1c2128; }
+  .col-item input[type=checkbox] { accent-color: #58a6ff; width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
+  .col-item label { font-size: 12px; color: #cdd9e5; cursor: pointer; user-select: none; }
   .ql-sep { width: 1px; height: 18px; background: #21262d; }
   .quick-links { display: flex; align-items: center; gap: 6px; }
   .ql-link { display: flex; align-items: center; height: 28px; padding: 0 10px; background: #1c2128; border: 1px solid #30363d; border-radius: 6px; font-size: 12px; color: #adbac7; text-decoration: none; white-space: nowrap; transition: all .15s; }
@@ -218,6 +225,12 @@
         <option value="">Tous rapporteurs</option>
       </select>
       <button class="load-btn" id="jira-btn" onclick="loadBugs()">Charger</button>
+      <div style="position:relative">
+        <button class="config-btn" onclick="toggleColPanel()" id="col-btn">Colonnes</button>
+        <div id="col-panel" class="col-panel hidden">
+          <div class="col-panel-title">Colonnes visibles</div>
+        </div>
+      </div>
       <div class="filter-sep"></div>
       <div class="pole-legend">
         <span class="pole-legend-item"><span class="pole-dot" style="background:#fde047"></span>APV</span>
@@ -280,14 +293,14 @@
             <col style="width:185px">
           </colgroup>
           <thead><tr>
-            <th onclick="sort('created')">Créé le</th>
-            <th onclick="sort('key')">N°</th>
-            <th onclick="sort('summary')">Résumé</th>
-            <th onclick="sort('status')" style="text-align:center">Statut</th>
-            <th onclick="sort('reporter')">Rapporteur</th>
-            <th onclick="sort('assignee')">Assigné</th>
-            <th onclick="sort('product')">Produit</th>
-            <th onclick="sort('versions')">Version affectée</th>
+            <th class="col-created" onclick="sort('created')">Créé le</th>
+            <th class="col-key" onclick="sort('key')">N°</th>
+            <th class="col-summary" onclick="sort('summary')">Résumé</th>
+            <th class="col-status" onclick="sort('status')" style="text-align:center">Statut</th>
+            <th class="col-reporter" onclick="sort('reporter')">Rapporteur</th>
+            <th class="col-assignee" onclick="sort('assignee')">Assigné</th>
+            <th class="col-product" onclick="sort('product')">Produit</th>
+            <th class="col-versions" onclick="sort('versions')">Version affectée</th>
           </tr></thead>
           <tbody id="tbody"></tbody>
         </table>
@@ -472,6 +485,73 @@
     }
   });
 
+  // ── Colonnes ────────────────────────────────────────────────────────────────
+  const COL_DEFS = [
+    { id: 'created',  label: 'Créé le' },
+    { id: 'key',      label: 'N°' },
+    { id: 'summary',  label: 'Résumé' },
+    { id: 'status',   label: 'Statut' },
+    { id: 'reporter', label: 'Rapporteur' },
+    { id: 'assignee', label: 'Assigné' },
+    { id: 'product',  label: 'Produit' },
+    { id: 'versions', label: 'Version affectée' },
+  ];
+
+  function loadColPrefs() {
+    try { return JSON.parse(localStorage.getItem('col_prefs') || '{}'); } catch { return {}; }
+  }
+
+  function saveColPrefs(prefs) {
+    localStorage.setItem('col_prefs', JSON.stringify(prefs));
+  }
+
+  function applyColumns() {
+    const prefs = loadColPrefs();
+    COL_DEFS.forEach(c => {
+      const hidden = prefs[c.id] === false;
+      document.querySelectorAll(`.col-${c.id}`).forEach(el => {
+        el.style.display = hidden ? 'none' : '';
+      });
+    });
+  }
+
+  function toggleColPanel() {
+    const panel = document.getElementById('col-panel');
+    if (panel.classList.contains('hidden')) {
+      buildColPanel();
+      panel.classList.remove('hidden');
+    } else {
+      panel.classList.add('hidden');
+    }
+  }
+
+  function buildColPanel() {
+    const prefs = loadColPrefs();
+    const panel = document.getElementById('col-panel');
+    const items = COL_DEFS.map(c => {
+      const checked = prefs[c.id] !== false;
+      return `<div class="col-item">
+        <input type="checkbox" id="chk-${c.id}" ${checked ? 'checked' : ''} onchange="toggleColVisibility('${c.id}', this.checked)">
+        <label for="chk-${c.id}">${c.label}</label>
+      </div>`;
+    }).join('');
+    panel.innerHTML = `<div class="col-panel-title">Colonnes visibles</div>${items}`;
+  }
+
+  function toggleColVisibility(id, visible) {
+    const prefs = loadColPrefs();
+    prefs[id] = visible;
+    saveColPrefs(prefs);
+    applyColumns();
+  }
+
+  document.addEventListener('click', e => {
+    const panel = document.getElementById('col-panel');
+    if (panel && !panel.classList.contains('hidden') && !e.target.closest('#col-panel') && !e.target.closest('#col-btn')) {
+      panel.classList.add('hidden');
+    }
+  });
+
   // ── Jira ────────────────────────────────────────────────────────────────────
   function toggleCustomDates() {
     const custom = document.getElementById('period').value === 'custom';
@@ -636,6 +716,7 @@
 
     document.getElementById('jira-count').textContent = `${total} ticket${total > 1 ? 's' : ''}`;
     document.getElementById('jira-empty').style.display = total ? 'none' : 'flex';
+    applyColumns();
 
     document.getElementById('tbody').innerHTML = list.map(b => {
       const sc = {
@@ -656,18 +737,18 @@
       }[b.status] || 'sb-muted';
       const d = b.created ? new Date(b.created).toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'}) : '–';
       return `<tr>
-        <td class="date-cell">${d}</td>
-        <td><a class="key" href="${escHtml(b.url)}" target="_blank">${escHtml(b.key)}</a></td>
-        <td><div class="summary" title="${escHtml(b.summary)}">${escHtml(b.summary)}</div></td>
-        <td><span class="badge ${sc}">${escHtml(b.status)}</span></td>
-        <td class="reporter-name">${(() => {
+        <td class="date-cell col-created">${d}</td>
+        <td class="col-key"><a class="key" href="${escHtml(b.url)}" target="_blank">${escHtml(b.key)}</a></td>
+        <td class="col-summary"><div class="summary" title="${escHtml(b.summary)}">${escHtml(b.summary)}</div></td>
+        <td class="col-status"><span class="badge ${sc}">${escHtml(b.status)}</span></td>
+        <td class="reporter-name col-reporter">${(() => {
           const pole = POLES[b.reporter.toLowerCase()];
           const dot  = pole ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${POLE_COLORS[pole].color};margin-right:6px;flex-shrink:0;vertical-align:middle"></span>` : '';
           return dot + escHtml(b.reporter);
         })()}</td>
-        <td class="reporter-name">${escHtml(b.assignee)}</td>
-        <td class="summary" title="${escHtml(b.product)}">${escHtml(b.product)}</td>
-        <td class="summary" title="${escHtml(b.versions)}">${escHtml(b.versions)}</td>
+        <td class="reporter-name col-assignee">${escHtml(b.assignee)}</td>
+        <td class="summary col-product" title="${escHtml(b.product)}">${escHtml(b.product)}</td>
+        <td class="summary col-versions" title="${escHtml(b.versions)}">${escHtml(b.versions)}</td>
       </tr>`;
     }).join('');
   }
