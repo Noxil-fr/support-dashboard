@@ -87,7 +87,7 @@
   #tab-jira .content-row { display: flex; flex: 1; overflow: hidden; }
 
   #tab-jira .table-area  { flex: 1; border-right: 1px solid #21262d; overflow-y: auto; }
-  #tab-jira .stats-side { flex: 0 0 280px; display: flex; flex-direction: column; overflow-y: auto; gap: 1px; background: #21262d; }
+  #tab-jira .stats-side { flex: 0 0 280px; display: flex; flex-direction: column; overflow-y: auto; gap: 1px; background: #21262d; border-right: 1px solid #21262d; }
   #tab-jira .stats-side .stat { border-left-width: 3px; border-left-style: solid; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   #tab-jira .stats-side .stat-lbl { order: -1; flex: 1; font-size: 12px; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: .4px; margin: 0; }
   #tab-jira .stats-side .stat-row { margin: 0; gap: 8px; align-items: baseline; flex-shrink: 0; }
@@ -247,7 +247,25 @@
     <!-- Tableau + stats côte à côte -->
     <div class="content-row">
 
-      <!-- Tableau (2/3) -->
+      <!-- Stats verticales (gauche) -->
+      <div class="stats-side">
+        <div class="tech-section">
+          <div id="tech-list"></div>
+        </div>
+        <div class="stat s-total">   <div class="stat-row"><span class="stat-val" id="s-total">0</span><span class="stat-pct" id="sp-total"></span></div><div class="stat-lbl">Total</div></div>
+        <div class="stat s-backlog"> <div class="stat-row"><span class="stat-val" id="s-backlog">0</span><span class="stat-pct" id="sp-backlog"></span></div><div class="stat-lbl">Backlog</div></div>
+        <div class="stat s-todo">    <div class="stat-row"><span class="stat-val" id="s-todo">0</span><span class="stat-pct" id="sp-todo"></span></div><div class="stat-lbl">À faire</div></div>
+        <div class="stat s-pending"> <div class="stat-row"><span class="stat-val" id="s-pending">0</span><span class="stat-pct" id="sp-pending"></span></div><div class="stat-lbl">Pending Test</div></div>
+        <div class="stat s-psupport"><div class="stat-row"><span class="stat-val" id="s-psupport">0</span><span class="stat-pct" id="sp-psupport"></span></div><div class="stat-lbl">Pending Support</div></div>
+        <div class="stat s-blocked"> <div class="stat-row"><span class="stat-val" id="s-blocked">0</span><span class="stat-pct" id="sp-blocked"></span></div><div class="stat-lbl">Blocked</div></div>
+        <div class="stat s-encours"> <div class="stat-row"><span class="stat-val" id="s-encours">0</span><span class="stat-pct" id="sp-encours"></span></div><div class="stat-lbl">En cours</div></div>
+        <div class="stat s-revue">   <div class="stat-row"><span class="stat-val" id="s-revue">0</span><span class="stat-pct" id="sp-revue"></span></div><div class="stat-lbl">Revue en cours</div></div>
+        <div class="stat s-ceased">  <div class="stat-row"><span class="stat-val" id="s-ceased">0</span><span class="stat-pct" id="sp-ceased"></span></div><div class="stat-lbl">Ceased</div></div>
+        <div class="stat s-done">    <div class="stat-row"><span class="stat-val" id="s-done">0</span><span class="stat-pct" id="sp-done"></span></div><div class="stat-lbl">Terminé(e)</div></div>
+        <div class="stat s-ready">   <div class="stat-row"><span class="stat-val" id="s-ready">0</span><span class="stat-pct" id="sp-ready"></span></div><div class="stat-lbl">Ready to be Released</div></div>
+      </div>
+
+      <!-- Tableau -->
       <div class="table-area">
         <div class="empty-state" id="jira-empty" style="display:none">Aucun bug trouvé.</div>
         <table id="jira-table">
@@ -275,23 +293,6 @@
         </table>
       </div>
 
-      <!-- Stats verticales (1/3) -->
-      <div class="stats-side">
-        <div class="tech-section">
-          <div id="tech-list"></div>
-        </div>
-        <div class="stat s-total">   <div class="stat-row"><span class="stat-val" id="s-total">0</span><span class="stat-pct" id="sp-total"></span></div><div class="stat-lbl">Total</div></div>
-        <div class="stat s-backlog"> <div class="stat-row"><span class="stat-val" id="s-backlog">0</span><span class="stat-pct" id="sp-backlog"></span></div><div class="stat-lbl">Backlog</div></div>
-        <div class="stat s-todo">    <div class="stat-row"><span class="stat-val" id="s-todo">0</span><span class="stat-pct" id="sp-todo"></span></div><div class="stat-lbl">À faire</div></div>
-        <div class="stat s-pending"> <div class="stat-row"><span class="stat-val" id="s-pending">0</span><span class="stat-pct" id="sp-pending"></span></div><div class="stat-lbl">Pending Test</div></div>
-        <div class="stat s-psupport"><div class="stat-row"><span class="stat-val" id="s-psupport">0</span><span class="stat-pct" id="sp-psupport"></span></div><div class="stat-lbl">Pending Support</div></div>
-        <div class="stat s-blocked"> <div class="stat-row"><span class="stat-val" id="s-blocked">0</span><span class="stat-pct" id="sp-blocked"></span></div><div class="stat-lbl">Blocked</div></div>
-        <div class="stat s-encours"> <div class="stat-row"><span class="stat-val" id="s-encours">0</span><span class="stat-pct" id="sp-encours"></span></div><div class="stat-lbl">En cours</div></div>
-        <div class="stat s-revue">   <div class="stat-row"><span class="stat-val" id="s-revue">0</span><span class="stat-pct" id="sp-revue"></span></div><div class="stat-lbl">Revue en cours</div></div>
-        <div class="stat s-ceased">  <div class="stat-row"><span class="stat-val" id="s-ceased">0</span><span class="stat-pct" id="sp-ceased"></span></div><div class="stat-lbl">Ceased</div></div>
-        <div class="stat s-done">    <div class="stat-row"><span class="stat-val" id="s-done">0</span><span class="stat-pct" id="sp-done"></span></div><div class="stat-lbl">Terminé(e)</div></div>
-        <div class="stat s-ready">   <div class="stat-row"><span class="stat-val" id="s-ready">0</span><span class="stat-pct" id="sp-ready"></span></div><div class="stat-lbl">Ready to be Released</div></div>
-      </div>
 
     </div><!-- fin content-row -->
     </div><!-- fin main-row -->
