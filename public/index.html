@@ -669,8 +669,9 @@
     'Compta':{ bg: '#2d1117', color: '#f85149' },
   };
 
-  const GROUP_ORDER = ['ICAR', 'ICOM', 'DMS Gateway', 'Autre'];
+  const GROUP_ORDER = ['Sans version', 'ICAR', 'ICOM', 'DMS Gateway', 'Autre'];
   const groupOf = v => {
+    if (v === 'Sans version')        return 'Sans version';
     if (v.startsWith('ICAR'))        return 'ICAR';
     if (v.startsWith('ICOM'))        return 'ICOM';
     if (v.startsWith('DMS Gateway')) return 'DMS Gateway';
