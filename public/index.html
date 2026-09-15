@@ -84,17 +84,8 @@
 
   /* Jira : layout principal */
   #tab-jira .main-row { display: flex; flex: 1; overflow: hidden; }
-  #tab-jira .content-row { display: flex; flex: 0 0 66.67%; overflow: hidden; border-right: 1px solid #21262d; }
+  #tab-jira .content-row { display: flex; flex: 1; overflow: hidden; }
 
-  /* Panneau tuiles (1/3 droit) */
-  .tiles-panel { flex: 0 0 33.33%; padding: 20px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #0d1117; }
-  .tiles-panel h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #6e7681; margin-bottom: 4px; }
-  .tile { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #161b22; border: 1px solid #21262d; border-radius: 8px; text-decoration: none; color: #e6edf3; transition: all .15s; cursor: pointer; }
-  .tile:hover { background: #1c2128; border-color: #58a6ff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.4); }
-  .tile-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-  .tile-info { min-width: 0; }
-  .tile-name { font-size: 13px; font-weight: 600; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tile-url  { font-size: 12px; color: #6e7681; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
   #tab-jira .table-area  { flex: 1; border-right: 1px solid #21262d; overflow-y: auto; }
   #tab-jira .stats-side { flex: 0 0 220px; display: flex; flex-direction: column; overflow-y: auto; gap: 1px; background: #21262d; }
   #tab-jira .stats-side .stat { border-left-width: 3px; border-left-style: solid; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -252,39 +243,6 @@
 
     <!-- Layout principal : 2/3 résultats + 1/3 tuiles -->
     <div class="main-row" id="jira-stats" style="display:none">
-
-    <!-- Tuiles (1/3 droit) -->
-    <div class="tiles-panel">
-      <h3>Accès rapide</h3>
-      <a class="tile" href="https://gateway-chaos-helper.vercel.app/" target="_blank">
-        <div class="tile-icon" style="background:#1a2a1a">🌐</div>
-        <div class="tile-info">
-          <div class="tile-name">Gateway Chaos Helper</div>
-          <div class="tile-url">gateway-chaos-helper.vercel.app</div>
-        </div>
-      </a>
-      <a class="tile" href="https://noxil-fr.github.io/Reference-de-tri/" target="_blank">
-        <div class="tile-icon" style="background:#1a1a2a">🔀</div>
-        <div class="tile-info">
-          <div class="tile-name">Conversion référence de tri</div>
-          <div class="tile-url">noxil-fr.github.io/Reference-de-tri</div>
-        </div>
-      </a>
-      <a class="tile" href="https://noxil-fr.github.io/db-icar/" target="_blank">
-        <div class="tile-icon" style="background:#2a1a1a">🗄️</div>
-        <div class="tile-info">
-          <div class="tile-name">Database I'carDMS</div>
-          <div class="tile-url">noxil-fr.github.io/db-icar</div>
-        </div>
-      </a>
-      <a class="tile" href="https://onenextlane.sharepoint.com/:o:/r/sites/Equipesupport/Documents%20partages/Equipe%20Support/Connexions%20clients?d=w815eb121de054250b4aa1d308601cd9e&csf=1&web=1&e=fWWNfK" target="_blank">
-        <div class="tile-icon" style="background:#1a1f2e">🔗</div>
-        <div class="tile-info">
-          <div class="tile-name">Connexions clients</div>
-          <div class="tile-url">icarsystems.sharepoint.com</div>
-        </div>
-      </a>
-    </div>
 
     <!-- Tableau + stats côte à côte -->
     <div class="content-row">
