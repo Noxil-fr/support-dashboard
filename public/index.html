@@ -258,6 +258,7 @@
             <col style="width:185px">
             <col style="width:185px">
             <col style="width:110px">
+            <col style="width:150px">
             <col style="width:100px">
           </colgroup>
           <thead><tr>
@@ -267,6 +268,7 @@
             <th onclick="sort('reporter')">Rapporteur</th>
             <th onclick="sort('assignee')">Assigné</th>
             <th onclick="sort('product')">Produit</th>
+            <th onclick="sort('versions')">Version affectée</th>
             <th onclick="sort('created')">Créé le</th>
           </tr></thead>
           <tbody id="tbody"></tbody>
@@ -546,6 +548,7 @@
         reporter: i.fields.reporter?.displayName || '-',
         assignee: i.fields.assignee?.displayName || '-',
         product:  i.fields.customfield_10136?.value || '-',
+        versions: (i.fields.versions || []).map(v => v.name).join(', ') || '-',
         created:  i.fields.created || '',
         url:      `https://${domain}/browse/${i.key}`
       }));
@@ -662,6 +665,7 @@
         })()}</td>
         <td class="reporter-name">${escHtml(b.assignee)}</td>
         <td class="summary" title="${escHtml(b.product)}">${escHtml(b.product)}</td>
+        <td class="summary" title="${escHtml(b.versions)}">${escHtml(b.versions)}</td>
         <td class="date-cell">${d}</td>
       </tr>`;
     }).join('');
