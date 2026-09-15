@@ -394,8 +394,8 @@
 
   // ── PIN ─────────────────────────────────────────────────────────────────────
   function openConfig() {
-    const pin = CFG.dashboard_pin || '';
-    if (!pin) { showConfigModal(); return; }
+    if (!cfgReady) return;
+    if (!CFG.has_pin) { showConfigModal(); return; }
     clearPinInputs();
     document.getElementById('pin-err').style.display = 'none';
     document.getElementById('overlay-pin').classList.remove('hidden');
@@ -416,31 +416,46 @@
     if (code.length === 6) checkPin(code);
   }
 
-  function checkPin(code) {
-    if (code === (CFG.dashboard_pin || '')) {
-      closePin(); showConfigModal();
-    } else {
-      document.getElementById('pin-err').style.display = 'block';
-      document.getElementById('pin-inputs').classList.add('pin-shake');
-      setTimeout(() => {
-        document.getElementById('pin-inputs').classList.remove('pin-shake');
-        clearPinInputs();
-        document.querySelector('#pin-inputs input').focus();
-      }, 350);
-    }
+  async function checkPin(code) {
+    try {
+      const res  = await fetch('/api/verify-pin', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ pin: code }) });
+      const data = await res.json();
+      if (data.ok) { closePin(); showConfigModal(); return; }
+    } catch { /* réseau KO — refusé */ }
+    document.getElementById('pin-err').style.display = 'block';
+    document.getElementById('pin-inputs').classList.add('pin-shake');
+    setTimeout(() => {
+      document.getElementById('pin-inputs').classList.remove('pin-shake');
+      clearPinInputs();
+      document.querySelector('#pin-inputs input').focus();
+    }, 350);
   }
 
-  // ── Config (stockée dans localStorage) ─────────────────────────────────────
-  let CFG = {};
+  // ── Config ──────────────────────────────────────────────────────────────────
+  let CFG = {}, cfgReady = false;
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
   async function loadServerConfig() {
     try {
       const res = await fetch('/api/config');
-      CFG = await res.json();
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const srv = await res.json();
+      const saved = JSON.parse(localStorage.getItem('app_config') || '{}');
+      CFG = {
+        jira_domain:  srv.jira_domain  || saved.jira_domain  || '',
+        jira_email:   srv.jira_email   || saved.jira_email   || '',
+        jira_token:   srv.jira_token   || saved.jira_token   || '',
+        jira_project: srv.jira_project || saved.jira_project || '',
+        has_pin:      srv.has_pin,
+      };
     } catch {
-      const saved = localStorage.getItem('app_config');
-      CFG = saved ? JSON.parse(saved) : {};
+      try { CFG = JSON.parse(localStorage.getItem('app_config') || '{}'); }
+      catch { CFG = {}; }
     }
+    cfgReady = true;
   }
 
   function showConfigModal() {
@@ -460,6 +475,7 @@
       jira_email:   document.getElementById('cfg-email').value.trim(),
       jira_token:   document.getElementById('cfg-token').value.trim(),
       jira_project: document.getElementById('cfg-project').value.trim(),
+      has_pin:      CFG.has_pin,
     };
     localStorage.setItem('app_config', JSON.stringify(CFG));
     updateHeaderStatus();
@@ -664,15 +680,15 @@
       }[b.status] || 'sb-muted';
       const d = b.created ? new Date(b.created).toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'}) : '–';
       return `<tr>
-        <td><a class="key" href="${b.url}" target="_blank">${b.key}</a></td>
-        <td><div class="summary" title="${b.summary}">${b.summary}</div></td>
-        <td><span class="badge ${sc}">${b.status}</span></td>
+        <td><a class="key" href="${escHtml(b.url)}" target="_blank">${escHtml(b.key)}</a></td>
+        <td><div class="summary" title="${escHtml(b.summary)}">${escHtml(b.summary)}</div></td>
+        <td><span class="badge ${sc}">${escHtml(b.status)}</span></td>
         <td class="reporter-name">${(() => {
           const pole = POLES[b.reporter.toLowerCase()];
           const dot  = pole ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${POLE_COLORS[pole].color};margin-right:6px;flex-shrink:0;vertical-align:middle"></span>` : '';
-          return dot + b.reporter;
+          return dot + escHtml(b.reporter);
         })()}</td>
-        <td class="summary" title="${b.product}">${b.product}</td>
+        <td class="summary" title="${escHtml(b.product)}">${escHtml(b.product)}</td>
         <td class="date-cell">${d}</td>
       </tr>`;
     }).join('');

@@ -31,13 +31,19 @@ app.get('/api/config', (req, res) => {
     jira_email:    process.env.JIRA_EMAIL     || file.jira_email   || '',
     jira_token:    process.env.JIRA_TOKEN     || file.jira_token   || '',
     jira_project:  process.env.JIRA_PROJECT   || file.jira_project || '',
-    dashboard_pin: process.env.DASHBOARD_PIN  || '',
+    has_pin:       !!process.env.DASHBOARD_PIN,
   });
 });
 
 app.post('/api/config', (req, res) => {
   writeConfig(req.body);
   res.json({ ok: true });
+});
+
+app.post('/api/verify-pin', (req, res) => {
+  const expected = process.env.DASHBOARD_PIN || '';
+  if (!expected) return res.json({ ok: true });
+  res.json({ ok: req.body.pin === expected });
 });
 
 // ── Jira ──────────────────────────────────────────────────────────────────────
