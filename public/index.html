@@ -130,7 +130,7 @@
   #jira-table colgroup .col-date    { width: 100px; }
   #jira-table th:nth-child(3), #jira-table td:nth-child(3) { width: 160px; text-align: center; }
   .reporter-name { color: #e6edf3; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0; }
-  .date-cell { font-size: 12px; color: #6e7681; white-space: nowrap; }
+  .date-cell { font-size: 12px; color: #adbac7; white-space: nowrap; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; letter-spacing: .3px; border: 1px solid transparent; }
   .sb-grey     { background: #1c2128; color: #adbac7; border-color: #30363d; }
   .sb-green    { background: #0a2d1a; color: #3fb950; border-color: #1a5c30; }
@@ -270,6 +270,7 @@
         <div class="empty-state" id="jira-empty" style="display:none">Aucun bug trouvé.</div>
         <table id="jira-table">
           <colgroup>
+            <col style="width:100px">
             <col style="width:110px">
             <col>
             <col style="width:160px">
@@ -277,17 +278,16 @@
             <col style="width:185px">
             <col style="width:110px">
             <col style="width:150px">
-            <col style="width:100px">
           </colgroup>
           <thead><tr>
-            <th onclick="sort('key')">Clé</th>
+            <th onclick="sort('created')">Créé le</th>
+            <th onclick="sort('key')">N°</th>
             <th onclick="sort('summary')">Résumé</th>
             <th onclick="sort('status')" style="text-align:center">Statut</th>
             <th onclick="sort('reporter')">Rapporteur</th>
             <th onclick="sort('assignee')">Assigné</th>
             <th onclick="sort('product')">Produit</th>
             <th onclick="sort('versions')">Version affectée</th>
-            <th onclick="sort('created')">Créé le</th>
           </tr></thead>
           <tbody id="tbody"></tbody>
         </table>
@@ -656,6 +656,7 @@
       }[b.status] || 'sb-muted';
       const d = b.created ? new Date(b.created).toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'}) : '–';
       return `<tr>
+        <td class="date-cell">${d}</td>
         <td><a class="key" href="${escHtml(b.url)}" target="_blank">${escHtml(b.key)}</a></td>
         <td><div class="summary" title="${escHtml(b.summary)}">${escHtml(b.summary)}</div></td>
         <td><span class="badge ${sc}">${escHtml(b.status)}</span></td>
@@ -667,7 +668,6 @@
         <td class="reporter-name">${escHtml(b.assignee)}</td>
         <td class="summary" title="${escHtml(b.product)}">${escHtml(b.product)}</td>
         <td class="summary" title="${escHtml(b.versions)}">${escHtml(b.versions)}</td>
-        <td class="date-cell">${d}</td>
       </tr>`;
     }).join('');
   }
