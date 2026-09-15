@@ -55,8 +55,8 @@
   .col-item label { font-size: 12px; color: #cdd9e5; cursor: pointer; user-select: none; }
   .ql-sep { width: 1px; height: 18px; background: #21262d; }
   .quick-links { display: flex; align-items: center; gap: 6px; }
-  .ql-link { display: flex; align-items: center; height: 28px; padding: 0 10px; background: #1c2128; border: 1px solid #30363d; border-radius: 6px; font-size: 12px; color: #adbac7; text-decoration: none; white-space: nowrap; transition: all .15s; }
-  .ql-link:hover { filter: brightness(1.3); }
+  .ql-link { display: flex; align-items: center; height: 30px; padding: 0 12px; background: #161b22; border: 1px solid #30363d; border-left: 3px solid #30363d; border-radius: 8px; font-size: 12px; font-weight: 600; color: #adbac7; text-decoration: none; white-space: nowrap; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
+  .ql-link:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.5); filter: brightness(1.25); }
 
   /* ── Error bar ───────────────────────────────────────────── */
   .err-bar { display: none; background: #2d1117; border-bottom: 1px solid #5c1a1a; padding: 8px 24px; font-size: 12px; color: #f85149; flex-shrink: 0; }
@@ -94,7 +94,20 @@
   #tab-jira .content-row { display: flex; flex: 1; overflow: hidden; }
 
   #tab-jira .table-area  { flex: 1; border-right: 1px solid #21262d; overflow-y: auto; }
-  #tab-jira .stats-side { flex: 0 0 252px; display: flex; flex-direction: column; overflow-y: auto; gap: 1px; background: #21262d; border-right: 1px solid #21262d; }
+  #tab-jira .stats-side { flex: 0 0 252px; display: flex; flex-direction: column; overflow: hidden; background: #21262d; border-right: 1px solid #21262d; }
+  .side-tabs { display: flex; flex-shrink: 0; background: #0d1117; border-bottom: 1px solid #21262d; }
+  .side-tab { flex: 1; padding: 7px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6e7681; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color .15s, border-color .15s, background .15s; }
+  .side-tab.active { color: #cdd9e5; background: #161b22; border-bottom-color: #58a6ff; }
+  .side-tab:hover:not(.active) { color: #8b949e; background: #0f1318; }
+  .side-pane { display: none; flex: 1; flex-direction: column; overflow-y: auto; gap: 1px; }
+  .side-pane.active { display: flex; }
+  .ver-row { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid #21262d; background: #161b22; overflow: hidden; transition: background .1s; }
+  .ver-row:hover { background: #1c2128; }
+  .ver-row-bar { position: absolute; left: 0; top: 0; height: 100%; background: #58a6ff30; pointer-events: none; transition: width .3s ease; }
+  .ver-row-name { flex: 1; font-size: 12px; color: #cdd9e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; }
+  .ver-row-count { font-size: 12px; font-weight: 700; color: #e6edf3; flex-shrink: 0; z-index: 1; }
+  .ver-group-header { padding: 6px 14px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #8b949e; background: #0d1117; border-bottom: 1px solid #21262d; position: sticky; top: 0; z-index: 1; }
+  .ver-empty { padding: 24px 14px; font-size: 12px; color: #6e7681; text-align: center; background: #161b22; }
   #tab-jira .stats-side .stat { border-left-width: 3px; border-left-style: solid; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   #tab-jira .stats-side .stat-lbl { order: -1; flex: 1; font-size: 12px; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: .4px; margin: 0; }
   #tab-jira .stats-side .stat-row { margin: 0; gap: 8px; align-items: baseline; flex-shrink: 0; }
@@ -116,12 +129,13 @@
   table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
   thead th {
     position: sticky; top: 0; z-index: 2;
-    padding: 9px 20px; background: #161b22; color: #6e7681;
+    padding: 9px 20px; background: #1e1232; color: #cdd9e5;
+    border-bottom: 1px solid #5c3a9a;
     font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
     border-bottom: 1px solid #21262d; text-align: left; white-space: nowrap;
     cursor: pointer; user-select: none;
   }
-  thead th:hover { color: #cdd9e5; }
+  thead th:hover { color: #e6edf3; }
   td { padding: 9px 20px; border-bottom: 1px solid #21262d; border-right: 1px solid #21262d; vertical-align: middle; }
   td:last-child { border-right: none; }
   thead th { border-right: 1px solid #21262d; }
@@ -226,7 +240,7 @@
       </select>
       <button class="load-btn" id="jira-btn" onclick="loadBugs()">Charger</button>
       <div style="position:relative">
-        <button class="load-btn" onclick="toggleColPanel()" id="col-btn" style="background:#1f4a8f;white-space:nowrap">Ajouter/supprimer des colonnes</button>
+        <button class="load-btn" onclick="toggleColPanel()" id="col-btn" style="background:#1e1232;border:1px solid #5c3a9a;white-space:nowrap">Ajouter/supprimer des colonnes</button>
         <div id="col-panel" class="col-panel hidden">
           <div class="col-panel-title">Colonnes visibles</div>
         </div>
@@ -243,10 +257,10 @@
         <span class="filter-raw" id="jira-raw-count"></span>
         <div class="ql-sep"></div>
         <div class="quick-links">
-          <a class="ql-link" href="https://gateway-chaos-helper.vercel.app/" target="_blank" style="background:#0a1f14;border-color:#1a3d28;color:#7ee8a2">Gateway Chaos Helper</a>
-          <a class="ql-link" href="https://noxil-fr.github.io/Reference-de-tri/" target="_blank" style="background:#0a1628;border-color:#1a3055;color:#79b8ff">Référence de tri</a>
-          <a class="ql-link" href="https://noxil-fr.github.io/db-icar/" target="_blank" style="background:#1f1409;border-color:#3d2810;color:#e3a96a">Database I'carDMS</a>
-          <a class="ql-link" href="https://onenextlane.sharepoint.com/:o:/r/sites/Equipesupport/Documents%20partages/Equipe%20Support/Connexions%20clients?d=w815eb121de054250b4aa1d308601cd9e&csf=1&web=1&e=fWWNfK" target="_blank" style="background:#160f28;border-color:#2d1f4d;color:#c0a7f0">Connexions clients</a>
+          <a class="ql-link" href="https://gateway-chaos-helper.vercel.app/" target="_blank" style="background:#0d1f14;border-left-color:#3fb950;color:#7ee8a2">Gateway Chaos Helper</a>
+          <a class="ql-link" href="https://noxil-fr.github.io/Reference-de-tri/" target="_blank" style="background:#0c1828;border-left-color:#58a6ff;color:#79b8ff">Référence de tri</a>
+          <a class="ql-link" href="https://noxil-fr.github.io/db-icar/" target="_blank" style="background:#1e1509;border-left-color:#e3a96a;color:#e3a96a">Database I'carDMS</a>
+          <a class="ql-link" href="https://onenextlane.sharepoint.com/:o:/r/sites/Equipesupport/Documents%20partages/Equipe%20Support/Connexions%20clients?d=w815eb121de054250b4aa1d308601cd9e&csf=1&web=1&e=fWWNfK" target="_blank" style="background:#160f28;border-left-color:#c0a7f0;color:#c0a7f0">Connexions clients</a>
         </div>
       </div>
     </div>
@@ -262,20 +276,31 @@
 
       <!-- Stats verticales (gauche) -->
       <div class="stats-side">
-        <div class="tech-section">
-          <div id="tech-list"></div>
+        <div class="side-tabs">
+          <button class="side-tab active" id="side-tab-techs" onclick="switchSidePane('techs')">ACTO</button>
+          <button class="side-tab" id="side-tab-versions" onclick="switchSidePane('versions')">Versions</button>
         </div>
-        <div class="stat s-total">   <div class="stat-row"><span class="stat-val" id="s-total">0</span><span class="stat-pct" id="sp-total"></span></div><div class="stat-lbl">Total</div></div>
-        <div class="stat s-backlog"> <div class="stat-row"><span class="stat-val" id="s-backlog">0</span><span class="stat-pct" id="sp-backlog"></span></div><div class="stat-lbl">Backlog</div></div>
-        <div class="stat s-todo">    <div class="stat-row"><span class="stat-val" id="s-todo">0</span><span class="stat-pct" id="sp-todo"></span></div><div class="stat-lbl">À faire</div></div>
-        <div class="stat s-pending"> <div class="stat-row"><span class="stat-val" id="s-pending">0</span><span class="stat-pct" id="sp-pending"></span></div><div class="stat-lbl">Pending Test</div></div>
-        <div class="stat s-psupport"><div class="stat-row"><span class="stat-val" id="s-psupport">0</span><span class="stat-pct" id="sp-psupport"></span></div><div class="stat-lbl">Pending Support</div></div>
-        <div class="stat s-blocked"> <div class="stat-row"><span class="stat-val" id="s-blocked">0</span><span class="stat-pct" id="sp-blocked"></span></div><div class="stat-lbl">Blocked</div></div>
-        <div class="stat s-encours"> <div class="stat-row"><span class="stat-val" id="s-encours">0</span><span class="stat-pct" id="sp-encours"></span></div><div class="stat-lbl">En cours</div></div>
-        <div class="stat s-revue">   <div class="stat-row"><span class="stat-val" id="s-revue">0</span><span class="stat-pct" id="sp-revue"></span></div><div class="stat-lbl">Revue en cours</div></div>
-        <div class="stat s-ceased">  <div class="stat-row"><span class="stat-val" id="s-ceased">0</span><span class="stat-pct" id="sp-ceased"></span></div><div class="stat-lbl">Ceased</div></div>
-        <div class="stat s-done">    <div class="stat-row"><span class="stat-val" id="s-done">0</span><span class="stat-pct" id="sp-done"></span></div><div class="stat-lbl">Terminé(e)</div></div>
-        <div class="stat s-ready">   <div class="stat-row"><span class="stat-val" id="s-ready">0</span><span class="stat-pct" id="sp-ready"></span></div><div class="stat-lbl">Ready to be Released</div></div>
+        <!-- Pane techniciens -->
+        <div class="side-pane active" id="side-pane-techs">
+          <div class="tech-section">
+            <div id="tech-list"></div>
+          </div>
+          <div class="stat s-total">   <div class="stat-row"><span class="stat-val" id="s-total">0</span><span class="stat-pct" id="sp-total"></span></div><div class="stat-lbl">Total</div></div>
+          <div class="stat s-backlog"> <div class="stat-row"><span class="stat-val" id="s-backlog">0</span><span class="stat-pct" id="sp-backlog"></span></div><div class="stat-lbl">Backlog</div></div>
+          <div class="stat s-todo">    <div class="stat-row"><span class="stat-val" id="s-todo">0</span><span class="stat-pct" id="sp-todo"></span></div><div class="stat-lbl">À faire</div></div>
+          <div class="stat s-pending"> <div class="stat-row"><span class="stat-val" id="s-pending">0</span><span class="stat-pct" id="sp-pending"></span></div><div class="stat-lbl">Pending Test</div></div>
+          <div class="stat s-psupport"><div class="stat-row"><span class="stat-val" id="s-psupport">0</span><span class="stat-pct" id="sp-psupport"></span></div><div class="stat-lbl">Pending Support</div></div>
+          <div class="stat s-blocked"> <div class="stat-row"><span class="stat-val" id="s-blocked">0</span><span class="stat-pct" id="sp-blocked"></span></div><div class="stat-lbl">Blocked</div></div>
+          <div class="stat s-encours"> <div class="stat-row"><span class="stat-val" id="s-encours">0</span><span class="stat-pct" id="sp-encours"></span></div><div class="stat-lbl">En cours</div></div>
+          <div class="stat s-revue">   <div class="stat-row"><span class="stat-val" id="s-revue">0</span><span class="stat-pct" id="sp-revue"></span></div><div class="stat-lbl">Revue en cours</div></div>
+          <div class="stat s-ceased">  <div class="stat-row"><span class="stat-val" id="s-ceased">0</span><span class="stat-pct" id="sp-ceased"></span></div><div class="stat-lbl">Ceased</div></div>
+          <div class="stat s-done">    <div class="stat-row"><span class="stat-val" id="s-done">0</span><span class="stat-pct" id="sp-done"></span></div><div class="stat-lbl">Terminé(e)</div></div>
+          <div class="stat s-ready">   <div class="stat-row"><span class="stat-val" id="s-ready">0</span><span class="stat-pct" id="sp-ready"></span></div><div class="stat-lbl">Ready to be Released</div></div>
+        </div>
+        <!-- Pane versions -->
+        <div class="side-pane" id="side-pane-versions">
+          <div id="versions-list"><div class="ver-empty">Chargez des données pour voir les versions.</div></div>
+        </div>
       </div>
 
       <!-- Tableau -->
@@ -477,14 +502,14 @@
 
   // ── Colonnes ────────────────────────────────────────────────────────────────
   const COL_DEFS = [
-    { id: 'created',  label: 'Créé le' },
-    { id: 'key',      label: 'N°' },
-    { id: 'summary',  label: 'Résumé' },
-    { id: 'status',   label: 'Statut' },
-    { id: 'reporter', label: 'Rapporteur' },
-    { id: 'assignee', label: 'Assigné' },
-    { id: 'product',  label: 'Produit' },
-    { id: 'versions', label: 'Version affectée' },
+    { id: 'created',  label: 'Créé le',          width: '100px' },
+    { id: 'key',      label: 'N°',               width: '108px' },
+    { id: 'summary',  label: 'Résumé',           width: null   },
+    { id: 'status',   label: 'Statut',           width: '155px' },
+    { id: 'reporter', label: 'Rapporteur',       width: '150px' },
+    { id: 'assignee', label: 'Assigné',          width: '150px' },
+    { id: 'product',  label: 'Produit',          width: '110px' },
+    { id: 'versions', label: 'Version affectée', width: '185px' },
   ];
 
   function loadColPrefs() {
@@ -497,12 +522,35 @@
 
   function applyColumns() {
     const prefs = loadColPrefs();
+
+    // 1. Apply visibility + restore original widths on all <th>
     COL_DEFS.forEach(c => {
       const hidden = prefs[c.id] === false;
       document.querySelectorAll(`.col-${c.id}`).forEach(el => {
         el.style.display = hidden ? 'none' : '';
+        if (el.tagName === 'TH') {
+          el.style.width = c.width || '';
+        }
       });
     });
+
+    // 2. If summary is hidden, make the last visible <th> absorb remaining space
+    const summaryHidden = prefs['summary'] === false;
+    if (summaryHidden) {
+      const headers = document.querySelectorAll('#jira-table th');
+      let lastVisibleTh = null;
+      headers.forEach(th => {
+        if (th.style.display !== 'none') lastVisibleTh = th;
+      });
+      if (lastVisibleTh) lastVisibleTh.style.width = '';
+    }
+  }
+
+  function switchSidePane(id) {
+    document.querySelectorAll('.side-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.side-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`side-pane-${id}`).classList.add('active');
+    document.getElementById(`side-tab-${id}`).classList.add('active');
   }
 
   function toggleColPanel() {
@@ -703,6 +751,44 @@
           <span class="tech-row-count">${count}</span>
         </div>`;
       }).join('');
+
+    // Compteur par version — groupé avec détail
+    const verCounts = {};
+    list.forEach(b => {
+      const vers = b.versions && b.versions !== '-' ? b.versions.split(', ') : ['Sans version'];
+      vers.forEach(v => { const t = v.trim(); verCounts[t] = (verCounts[t] || 0) + 1; });
+    });
+    const groupOf = v => {
+      if (v.startsWith('ICAR'))        return 'ICAR';
+      if (v.startsWith('ICOM'))        return 'ICOM';
+      if (v.startsWith('DMS Gateway')) return 'DMS Gateway';
+      return 'Autre';
+    };
+    const groups = {};
+    Object.entries(verCounts).forEach(([name, count]) => {
+      const g = groupOf(name);
+      if (!groups[g]) groups[g] = { total: 0, versions: [] };
+      groups[g].total += count;
+      groups[g].versions.push([name, count]);
+    });
+    const parseVer = s => s.replace(/^[^\d]*/, '').split('.').map(p => { const n = parseInt(p, 10); return isNaN(n) ? p.toLowerCase() : n; });
+    const cmpVer = (a, b) => { const pa = parseVer(a), pb = parseVer(b); for (let i = 0; i < Math.max(pa.length, pb.length); i++) { const va = pa[i] ?? 0, vb = pb[i] ?? 0; if (va < vb) return -1; if (va > vb) return 1; } return 0; };
+    Object.values(groups).forEach(g => g.versions.sort((a, b) => cmpVer(b[0], a[0])));
+    const sortedGroups = Object.entries(groups).sort((a, b) => b[1].total - a[1].total);
+    const maxVerCount = sortedGroups[0]?.[1].versions[0]?.[1] || 1;
+    document.getElementById('versions-list').innerHTML = sortedGroups.length
+      ? sortedGroups.map(([gName, { versions }]) => {
+          const rows = versions.map(([name, count]) => {
+            const bar = Math.round(count / maxVerCount * 100);
+            return `<div class="ver-row">
+              <div class="ver-row-bar" style="width:${bar}%"></div>
+              <span class="ver-row-name">${escHtml(name)}</span>
+              <span class="ver-row-count">${count}</span>
+            </div>`;
+          }).join('');
+          return `<div class="ver-group-header">${escHtml(gName)}</div>${rows}`;
+        }).join('')
+      : '<div class="ver-empty">Aucune version trouvée.</div>';
 
     document.getElementById('jira-count').textContent = `${total} ticket${total > 1 ? 's' : ''}`;
     document.getElementById('jira-empty').style.display = total ? 'none' : 'flex';
