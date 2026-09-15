@@ -255,7 +255,8 @@
             <col style="width:110px">
             <col>
             <col style="width:110px">
-            <col style="width:165px">
+            <col style="width:150px">
+            <col style="width:150px">
             <col style="width:110px">
             <col style="width:100px">
           </colgroup>
@@ -264,6 +265,7 @@
             <th onclick="sort('summary')">Résumé</th>
             <th onclick="sort('status')" style="text-align:center">Statut</th>
             <th onclick="sort('reporter')">Rapporteur</th>
+            <th onclick="sort('assignee')">Assigné</th>
             <th onclick="sort('product')">Produit</th>
             <th onclick="sort('created')">Créé le</th>
           </tr></thead>
@@ -542,6 +544,7 @@
         summary:  i.fields.summary || '',
         status:   i.fields.status?.name || '-',
         reporter: i.fields.reporter?.displayName || '-',
+        assignee: i.fields.assignee?.displayName || '-',
         product:  i.fields.customfield_10136?.value || '-',
         created:  i.fields.created || '',
         url:      `https://${domain}/browse/${i.key}`
@@ -657,6 +660,7 @@
           const dot  = pole ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${POLE_COLORS[pole].color};margin-right:6px;flex-shrink:0;vertical-align:middle"></span>` : '';
           return dot + escHtml(b.reporter);
         })()}</td>
+        <td class="reporter-name">${escHtml(b.assignee)}</td>
         <td class="summary" title="${escHtml(b.product)}">${escHtml(b.product)}</td>
         <td class="date-cell">${d}</td>
       </tr>`;
