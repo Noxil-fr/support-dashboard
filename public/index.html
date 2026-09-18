@@ -53,6 +53,12 @@
   .col-item:hover { background: #1c2128; }
   .col-item input[type=checkbox], .col-item input[type=radio] { accent-color: #58a6ff; width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
   .col-item label { font-size: 12px; color: #cdd9e5; cursor: pointer; user-select: none; }
+  .filter-badge { display: none; align-items: center; gap: 5px; height: 24px; padding: 0 8px 0 10px; background: #1c2d4a; border: 1px solid #2d4a7a; border-radius: 12px; font-size: 11px; font-weight: 600; color: #79b8ff; cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s; }
+  .filter-badge:hover { background: #1a2540; border-color: #58a6ff; }
+  #badge-version { background: #0d2218; border-color: #1a5c30; color: #3fb950; }
+  #badge-version:hover { background: #0a1f14; border-color: #3fb950; }
+  .filter-badge.visible { display: inline-flex; }
+  .filter-badge-x { color: #6e7681; font-size: 14px; line-height: 1; margin-left: 2px; }
   .ql-sep { width: 1px; height: 18px; background: #21262d; }
   .quick-links { display: flex; align-items: center; gap: 6px; }
   .ql-link { display: flex; align-items: center; height: 30px; padding: 0 12px; background: #161b22; border: 1px solid #30363d; border-left: 3px solid #30363d; border-radius: 8px; font-size: 12px; font-weight: 600; color: #adbac7; text-decoration: none; white-space: nowrap; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
@@ -95,6 +101,10 @@
 
   #tab-jira .table-area  { flex: 1; border-right: 1px solid #21262d; overflow-y: auto; }
   #tab-jira .stats-side { flex: 0 0 252px; display: flex; flex-direction: column; overflow: hidden; background: #21262d; border-right: 1px solid #21262d; }
+  #side-pane-techs .stat { cursor: pointer; }
+  .stat.stat-active { background: #172236 !important; border-left-color: #58a6ff !important; box-shadow: inset -3px 0 0 #58a6ff; }
+  .stat.stat-active .stat-lbl { color: #cdd9e5; font-weight: 700; letter-spacing: .6px; }
+  .stat.stat-active .stat-val { filter: brightness(1.3); }
   .side-tabs { display: flex; flex-shrink: 0; background: #0d1117; border-bottom: 1px solid #21262d; }
   .side-tab { flex: 1; padding: 7px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6e7681; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color .15s, border-color .15s, background .15s; }
   .side-tab.active { color: #cdd9e5; background: #161b22; border-bottom-color: #58a6ff; }
@@ -244,18 +254,17 @@
       </div>
       <div class="filter-sep"></div>
       <input type="text" id="search" placeholder="Rechercher…" oninput="render()">
-      <select id="f-reporter" onchange="render()">
-        <option value="">Tous rapporteurs</option>
-      </select>
-      <select id="f-version" onchange="render()">
-        <option value="">Toutes versions</option>
-      </select>
       <button class="load-btn" id="jira-btn" onclick="loadBugs()">Charger</button>
       <div style="position:relative">
         <button class="load-btn" onclick="toggleColPanel()" id="col-btn" style="background:#1e1232;border:1px solid #5c3a9a;white-space:nowrap">⚗ Filtre</button>
         <div id="col-panel" class="col-panel hidden">
         </div>
       </div>
+      <span class="filter-badge" id="badge-reporter" onclick="clearFilter('reporter')" title="Effacer le filtre rapporteur"><span id="badge-reporter-name"></span><span class="filter-badge-x">×</span></span>
+      <span class="filter-badge" id="badge-version"   onclick="clearFilter('version')"  title="Effacer le filtre version"><span id="badge-version-name"></span><span class="filter-badge-x">×</span></span>
+      <span class="filter-badge" id="badge-status"    onclick="setStatusFilter(null,null)" title="Effacer le filtre statut"><span id="badge-status-name"></span><span class="filter-badge-x">×</span></span>
+      <select id="f-reporter" onchange="render()" style="display:none"><option value="">Tous rapporteurs</option></select>
+      <select id="f-version" onchange="render()" style="display:none"><option value="">Toutes versions</option></select>
       <div class="filter-sep"></div>
       <div class="pole-legend">
         <span class="pole-legend-item"><span class="pole-dot" style="background:#fde047"></span>APV</span>
@@ -293,20 +302,20 @@
         </div>
         <!-- Pane techniciens -->
         <div class="side-pane active" id="side-pane-techs">
+          <div class="stat s-total"    onclick="setStatusFilter(this,null)">              <div class="stat-row"><span class="stat-val" id="s-total">0</span><span class="stat-pct" id="sp-total"></span></div><div class="stat-lbl">Total</div></div>
+          <div class="stat s-backlog"  onclick="setStatusFilter(this,['Backlog'])">        <div class="stat-row"><span class="stat-val" id="s-backlog">0</span><span class="stat-pct" id="sp-backlog"></span></div><div class="stat-lbl">Backlog</div></div>
+          <div class="stat s-todo"     onclick="setStatusFilter(this,['À faire'])">        <div class="stat-row"><span class="stat-val" id="s-todo">0</span><span class="stat-pct" id="sp-todo"></span></div><div class="stat-lbl">À faire</div></div>
+          <div class="stat s-pending"  onclick="setStatusFilter(this,['Pending Test'])">   <div class="stat-row"><span class="stat-val" id="s-pending">0</span><span class="stat-pct" id="sp-pending"></span></div><div class="stat-lbl">Pending Test</div></div>
+          <div class="stat s-psupport" onclick="setStatusFilter(this,['Pending Support'])"><div class="stat-row"><span class="stat-val" id="s-psupport">0</span><span class="stat-pct" id="sp-psupport"></span></div><div class="stat-lbl">Pending Support</div></div>
+          <div class="stat s-blocked"  onclick="setStatusFilter(this,['Blocked'])">        <div class="stat-row"><span class="stat-val" id="s-blocked">0</span><span class="stat-pct" id="sp-blocked"></span></div><div class="stat-lbl">Blocked</div></div>
+          <div class="stat s-encours"  onclick="setStatusFilter(this,['En cours'])">       <div class="stat-row"><span class="stat-val" id="s-encours">0</span><span class="stat-pct" id="sp-encours"></span></div><div class="stat-lbl">En cours</div></div>
+          <div class="stat s-revue"    onclick="setStatusFilter(this,['Revue en cours'])"> <div class="stat-row"><span class="stat-val" id="s-revue">0</span><span class="stat-pct" id="sp-revue"></span></div><div class="stat-lbl">Revue en cours</div></div>
+          <div class="stat s-ceased"   onclick="setStatusFilter(this,['Ceased','Rejeté'])"><div class="stat-row"><span class="stat-val" id="s-ceased">0</span><span class="stat-pct" id="sp-ceased"></span></div><div class="stat-lbl">Ceased</div></div>
+          <div class="stat s-done"     onclick="setStatusFilter(this,['Terminé(e)','Résolu'])"><div class="stat-row"><span class="stat-val" id="s-done">0</span><span class="stat-pct" id="sp-done"></span></div><div class="stat-lbl">Terminé(e)</div></div>
+          <div class="stat s-ready"    onclick="setStatusFilter(this,['Ready to be Released'])"><div class="stat-row"><span class="stat-val" id="s-ready">0</span><span class="stat-pct" id="sp-ready"></span></div><div class="stat-lbl">Ready to be Released</div></div>
           <div class="tech-section">
             <div id="tech-list"></div>
           </div>
-          <div class="stat s-total">   <div class="stat-row"><span class="stat-val" id="s-total">0</span><span class="stat-pct" id="sp-total"></span></div><div class="stat-lbl">Total</div></div>
-          <div class="stat s-backlog"> <div class="stat-row"><span class="stat-val" id="s-backlog">0</span><span class="stat-pct" id="sp-backlog"></span></div><div class="stat-lbl">Backlog</div></div>
-          <div class="stat s-todo">    <div class="stat-row"><span class="stat-val" id="s-todo">0</span><span class="stat-pct" id="sp-todo"></span></div><div class="stat-lbl">À faire</div></div>
-          <div class="stat s-pending"> <div class="stat-row"><span class="stat-val" id="s-pending">0</span><span class="stat-pct" id="sp-pending"></span></div><div class="stat-lbl">Pending Test</div></div>
-          <div class="stat s-psupport"><div class="stat-row"><span class="stat-val" id="s-psupport">0</span><span class="stat-pct" id="sp-psupport"></span></div><div class="stat-lbl">Pending Support</div></div>
-          <div class="stat s-blocked"> <div class="stat-row"><span class="stat-val" id="s-blocked">0</span><span class="stat-pct" id="sp-blocked"></span></div><div class="stat-lbl">Blocked</div></div>
-          <div class="stat s-encours"> <div class="stat-row"><span class="stat-val" id="s-encours">0</span><span class="stat-pct" id="sp-encours"></span></div><div class="stat-lbl">En cours</div></div>
-          <div class="stat s-revue">   <div class="stat-row"><span class="stat-val" id="s-revue">0</span><span class="stat-pct" id="sp-revue"></span></div><div class="stat-lbl">Revue en cours</div></div>
-          <div class="stat s-ceased">  <div class="stat-row"><span class="stat-val" id="s-ceased">0</span><span class="stat-pct" id="sp-ceased"></span></div><div class="stat-lbl">Ceased</div></div>
-          <div class="stat s-done">    <div class="stat-row"><span class="stat-val" id="s-done">0</span><span class="stat-pct" id="sp-done"></span></div><div class="stat-lbl">Terminé(e)</div></div>
-          <div class="stat s-ready">   <div class="stat-row"><span class="stat-val" id="s-ready">0</span><span class="stat-pct" id="sp-ready"></span></div><div class="stat-lbl">Ready to be Released</div></div>
         </div>
         <!-- Pane versions -->
         <div class="side-pane" id="side-pane-versions">
@@ -557,6 +566,43 @@
     }
   }
 
+  const STAT_PALETTE = {
+    's-backlog':  { color: '#adbac7', bg: '#181c21', border: '#2d3642' },
+    's-todo':     { color: '#adbac7', bg: '#181c21', border: '#2d3642' },
+    's-pending':  { color: '#58a6ff', bg: '#0c1e3a', border: '#1a3a6b' },
+    's-psupport': { color: '#58a6ff', bg: '#0c1e3a', border: '#1a3a6b' },
+    's-blocked':  { color: '#58a6ff', bg: '#0c1e3a', border: '#1a3a6b' },
+    's-encours':  { color: '#58a6ff', bg: '#0c1e3a', border: '#1a3a6b' },
+    's-revue':    { color: '#58a6ff', bg: '#0c1e3a', border: '#1a3a6b' },
+    's-ceased':   { color: '#3fb950', bg: '#0a2010', border: '#1a5c30' },
+    's-done':     { color: '#3fb950', bg: '#0a2010', border: '#1a5c30' },
+    's-ready':    { color: '#3fb950', bg: '#0a2010', border: '#1a5c30' },
+  };
+
+  function clearFilter(type) {
+    document.getElementById(`f-${type}`).value = '';
+    render();
+  }
+
+  function setStatusFilter(el, statuses) {
+    const same = filterStatus && statuses && JSON.stringify(filterStatus) === JSON.stringify(statuses);
+    filterStatus = (same || !statuses) ? null : statuses;
+    document.querySelectorAll('#side-pane-techs .stat').forEach(s => s.classList.remove('stat-active'));
+    const badge = document.getElementById('badge-status');
+    if (filterStatus && el) {
+      el.classList.add('stat-active');
+      const statClass = [...el.classList].find(c => c.startsWith('s-') && c !== 'stat-active');
+      const pal = STAT_PALETTE[statClass] || { color: '#8b949e', bg: '#161b22', border: '#30363d' };
+      const label = el.querySelector('.stat-lbl').textContent;
+      document.getElementById('badge-status-name').textContent = label;
+      badge.style.cssText = `background:${pal.bg};border-color:${pal.border};color:${pal.color}`;
+      badge.classList.add('visible');
+    } else {
+      badge.classList.remove('visible');
+    }
+    render();
+  }
+
   function switchSidePane(id) {
     document.querySelectorAll('.side-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.side-tab').forEach(t => t.classList.remove('active'));
@@ -626,7 +672,7 @@
     el.style.display = custom ? 'flex' : 'none';
   }
 
-  let all = [], sortCol = 'created', sortAsc = false;
+  let all = [], sortCol = 'created', sortAsc = false, filterStatus = null;
   let reporterScope = localStorage.getItem('reporter_scope') || 'team';
 
   function filterByVersion(name) {
@@ -793,7 +839,7 @@
     const listForVersions = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr));
     const listForTechs    = all.filter(b => baseFilter(b) && matchesVersion(b));
 
-    let list = listForTechs.filter(b => !fr || b.reporter === fr).sort((a, b) => {
+    let list = listForTechs.filter(b => (!fr || b.reporter === fr) && (!filterStatus || filterStatus.includes(b.status))).sort((a, b) => {
       let va = a[sortCol] || '', vb = b[sortCol] || '';
       if (sortCol === 'created') { va = new Date(va); vb = new Date(vb); }
       else { va = va.toLowerCase(); vb = vb.toLowerCase(); }
@@ -871,6 +917,14 @@
           return `<div class="ver-group-header">${escHtml(gName)}</div>${rows}`;
         }).join('')
       : '<div class="ver-empty">Aucune version trouvée.</div>';
+
+    const updateBadge = (id, nameId, val) => {
+      const el = document.getElementById(id);
+      el.classList.toggle('visible', !!val);
+      if (val) document.getElementById(nameId).textContent = val;
+    };
+    updateBadge('badge-reporter', 'badge-reporter-name', document.getElementById('f-reporter').value);
+    updateBadge('badge-version',  'badge-version-name',  document.getElementById('f-version').value);
 
     document.getElementById('jira-count').textContent = `${total} ticket${total > 1 ? 's' : ''}`;
     document.getElementById('jira-empty').style.display = total ? 'none' : 'flex';
