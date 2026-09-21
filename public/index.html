@@ -170,7 +170,7 @@
   thead th:hover { color: #e6edf3; }
   td { padding: 9px 20px; border-bottom: 1px solid #21262d; border-right: 1px solid #21262d; vertical-align: middle; }
   td:last-child { border-right: none; }
-  thead th { border-right: 1px solid #21262d; position: relative; }
+  thead th { border-right: 1px solid #21262d; }
   thead th:last-child { border-right: none; }
   .col-resizer { position: absolute; right: 0; top: 0; width: 6px; height: 100%; cursor: col-resize; z-index: 3; user-select: none; }
   .col-resizer:hover, .col-resizer.active { background: rgba(88,166,255,.45); }
@@ -874,8 +874,8 @@
       handle.addEventListener('mousedown', e => {
         dragging     = true;
         justDragged  = false;
-        startX       = e.pageX;
-        startW       = th.offsetWidth;
+        startX       = e.clientX;
+        startW       = th.getBoundingClientRect().width;
         activeTh     = th;
         activeHandle = handle;
         handle.classList.add('active');
@@ -889,7 +889,7 @@
 
     document.addEventListener('mousemove', e => {
       if (!dragging) return;
-      const newW = Math.max(40, startW + (e.pageX - startX));
+      const newW = Math.max(40, startW + (e.clientX - startX));
       activeTh.style.width = newW + 'px';
       const colId = [...activeTh.classList].find(c => c.startsWith('col-'))?.replace('col-', '');
       const def = colId && COL_DEFS.find(c => c.id === colId);
