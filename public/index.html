@@ -55,8 +55,10 @@
   .col-item label { font-size: 12px; color: #cdd9e5; cursor: pointer; user-select: none; }
   .filter-badge { display: none; align-items: center; gap: 6px; height: 27px; padding: 0 10px 0 12px; background: #1c2d4a; border: 1px solid #2d4a7a; border-radius: 14px; font-size: 12px; font-weight: 600; color: #79b8ff; cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s; }
   .filter-badge:hover { background: #1a2540; border-color: #58a6ff; }
-  #badge-version { background: #0d2218; border-color: #1a5c30; color: #3fb950; }
-  #badge-version:hover { background: #0a1f14; border-color: #3fb950; }
+  #badge-version    { background: #2d1015; border-color: #7a2030; color: #f0a8aa; }
+  #badge-version:hover { background: #3a1018; border-color: #f85149; }
+  #badge-fixversion { background: #0d2218; border-color: #1a5c30; color: #3fb950; }
+  #badge-fixversion:hover { background: #0a1f14; border-color: #3fb950; }
   .filter-badge.visible { display: inline-flex; }
   .filter-badge-x { color: #6e7681; font-size: 14px; line-height: 1; margin-left: 2px; }
   .ql-sep { width: 1px; height: 18px; background: #21262d; }
@@ -119,10 +121,21 @@
   .ver-row { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid #21262d; background: #161b22; overflow: hidden; transition: background .1s; }
   .ver-row:hover { background: #1c2128; cursor: pointer; }
   .ver-row.selected { background: #1c3a6b; }
-  .ver-row.selected .ver-row-name { color: #58a6ff; font-weight: 700; }
+  .ver-row.selected .ver-row-name { color: #e6edf3; font-weight: 700; }
+  #ver-subpane-fixed .ver-row.selected { background: #0a2010; box-shadow: inset -2px 0 0 #3fb950; }
   .ver-row-bar { position: absolute; left: 0; top: 0; height: 100%; background: #3fb95030; pointer-events: none; transition: width .3s ease; }
   .ver-row-name { flex: 1; font-size: 12px; color: #cdd9e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; }
   .ver-row-count { font-size: 12px; font-weight: 700; color: #e6edf3; flex-shrink: 0; z-index: 1; }
+  .ver-subtabs { display: flex; flex-shrink: 0; gap: 5px; padding: 7px 10px; background: #0d1117; border-bottom: 1px solid #21262d; }
+  .ver-subtab { flex: 1; padding: 4px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #6e7681; background: #161b22; border: 1px solid #21262d; border-radius: 5px; cursor: pointer; transition: color .15s, background .15s, border-color .15s; }
+  #ver-subtab-affected.active { color: #f0a8aa; background: #2d1015; border-color: #7a2030; }
+  #ver-subtab-fixed.active    { color: #a8d8b0; background: #1a3a28; border-color: #3fb950; }
+  .ver-subtab:hover:not(.active) { color: #8b949e; border-color: #30363d; }
+  #ver-subpane-affected .ver-row-bar { background: #f8514926; }
+  #ver-subpane-affected .ver-row.selected { background: #2d1015; box-shadow: inset -2px 0 0 #f85149; }
+  #ver-subpane-fixed    .ver-row-bar { background: #3fb95026; }
+  .ver-subpane { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
+  .ver-subpane.active { display: flex; }
   .ver-group-header { padding: 6px 14px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #8b949e; background: #0d1117; border-bottom: 1px solid #21262d; position: sticky; top: 0; z-index: 2; }
   .ver-empty { padding: 24px 14px; font-size: 12px; color: #6e7681; text-align: center; background: #161b22; }
   #tab-jira .stats-side .stat { border-left-width: 3px; border-left-style: solid; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -157,8 +170,10 @@
   thead th:hover { color: #e6edf3; }
   td { padding: 9px 20px; border-bottom: 1px solid #21262d; border-right: 1px solid #21262d; vertical-align: middle; }
   td:last-child { border-right: none; }
-  thead th { border-right: 1px solid #21262d; }
+  thead th { border-right: 1px solid #21262d; position: relative; }
   thead th:last-child { border-right: none; }
+  .col-resizer { position: absolute; right: 0; top: 0; width: 6px; height: 100%; cursor: col-resize; z-index: 3; user-select: none; }
+  .col-resizer:hover, .col-resizer.active { background: rgba(88,166,255,.45); }
   tr:hover td { background: #1c2128; }
   .key { color: #58a6ff; font-weight: 700; font-size: 12px; text-decoration: none; white-space: nowrap; }
   .key:hover { text-decoration: underline; }
@@ -262,10 +277,12 @@
         </div>
       </div>
       <span class="filter-badge" id="badge-reporter" onclick="clearFilter('reporter')" title="Effacer le filtre rapporteur"><span id="badge-reporter-name"></span><span class="filter-badge-x">×</span></span>
-      <span class="filter-badge" id="badge-version"   onclick="clearFilter('version')"  title="Effacer le filtre version"><span id="badge-version-name"></span><span class="filter-badge-x">×</span></span>
+      <span class="filter-badge" id="badge-version"    onclick="clearFilter('version')"    title="Effacer le filtre version affectée"><span id="badge-version-name"></span><span class="filter-badge-x">×</span></span>
+      <span class="filter-badge" id="badge-fixversion" onclick="clearFilter('fixversion')" title="Effacer le filtre version corrigée"><span id="badge-fixversion-name"></span><span class="filter-badge-x">×</span></span>
       <span class="filter-badge" id="badge-status"    onclick="setStatusFilter(null,null)" title="Effacer le filtre statut"><span id="badge-status-name"></span><span class="filter-badge-x">×</span></span>
       <select id="f-reporter" onchange="render()" style="display:none"><option value="">Tous rapporteurs</option></select>
-      <select id="f-version" onchange="render()" style="display:none"><option value="">Toutes versions</option></select>
+      <select id="f-version"    onchange="render()" style="display:none"><option value="">Toutes versions</option></select>
+      <select id="f-fixversion" onchange="render()" style="display:none"><option value="">Toutes versions corrigées</option></select>
       <div class="filter-info">
         <span class="filter-count" id="jira-count"></span>
         <span class="filter-raw" id="jira-raw-count"></span>
@@ -320,7 +337,16 @@
         </div>
         <!-- Pane versions -->
         <div class="side-pane" id="side-pane-versions">
-          <div id="versions-list"><div class="ver-empty">Chargez des données pour voir les versions.</div></div>
+          <div class="ver-subtabs">
+            <button class="ver-subtab active" id="ver-subtab-affected" onclick="switchVerSubpane('affected')">Affectée</button>
+            <button class="ver-subtab" id="ver-subtab-fixed" onclick="switchVerSubpane('fixed')">Corrigée</button>
+          </div>
+          <div class="ver-subpane active" id="ver-subpane-affected">
+            <div id="versions-list"><div class="ver-empty">Chargez des données pour voir les versions.</div></div>
+          </div>
+          <div class="ver-subpane" id="ver-subpane-fixed">
+            <div id="fixversions-list"><div class="ver-empty">Chargez des données pour voir les versions.</div></div>
+          </div>
         </div>
       </div>
 
@@ -516,6 +542,7 @@
   window.addEventListener('DOMContentLoaded', async () => {
     await loadServerConfig();
     updateHeaderStatus();
+    initResizable();
     if (CFG.jira_domain && CFG.jira_token) {
       document.getElementById('period').value = '7';
       loadBugs();
@@ -607,6 +634,13 @@
     render();
   }
 
+  function switchVerSubpane(id) {
+    document.querySelectorAll('.ver-subpane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.ver-subtab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`ver-subpane-${id}`).classList.add('active');
+    document.getElementById(`ver-subtab-${id}`).classList.add('active');
+  }
+
   function switchSidePane(id) {
     document.querySelectorAll('.side-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.side-tab').forEach(t => t.classList.remove('active'));
@@ -638,7 +672,11 @@
       <div class="col-panel-title">Équipe</div>
       <div class="col-item">
         <input type="radio" name="scope" id="scope-team" ${reporterScope === 'team' ? 'checked' : ''} onchange="setReporterScope('team')">
-        <label for="scope-team">Support I'CAR DMS</label>
+        <label for="scope-team">Support SPC</label>
+      </div>
+      <div class="col-item">
+        <input type="radio" name="scope" id="scope-icar" ${reporterScope === 'icar' ? 'checked' : ''} onchange="setReporterScope('icar')">
+        <label for="scope-icar">I'CAR DMS</label>
       </div>
       <div class="col-item">
         <input type="radio" name="scope" id="scope-all" ${reporterScope === 'all' ? 'checked' : ''} onchange="setReporterScope('all')">
@@ -685,6 +723,12 @@
     render();
   }
 
+  function filterByFixVersion(name) {
+    const sel = document.getElementById('f-fixversion');
+    sel.value = (sel.value === name) ? '' : name;
+    render();
+  }
+
   function filterByTech(name) {
     const sel = document.getElementById('f-reporter');
     sel.value = (sel.value === name) ? '' : name;
@@ -694,7 +738,8 @@
   const ALLOWED_REPORTERS = [
     'Fabrice CIROT','Christophe MORLEGHEM','Sophie DUPONT','Jeyson ADELLE',
     'Freddy KIFFER','Antoine LANCELOT','Raphael RIGAUD','Hanh NGUYEN',
-    'Sylvie RODRIGUES','Luc MENARD','Thierry ANTOINE','Martin Gasque','David LECOSSIER'
+    'Sylvie RODRIGUES','Luc MENARD','Thierry ANTOINE','Martin Gasque','David LECOSSIER',
+    'Astrid Bougrier'
   ].map(n => n.toLowerCase());
 
   const POLES = {
@@ -731,23 +776,23 @@
   const cmpVer = (a, b) => { const pa = parseVer(a), pb = parseVer(b); for (let i = 0; i < Math.max(pa.length, pb.length); i++) { const va = pa[i] ?? 0, vb = pb[i] ?? 0; if (va < vb) return -1; if (va > vb) return 1; } return 0; };
 
   function buildVersionOptions() {
-    const groups = {};
-    all.forEach(b => {
-      const vers = b.versions && b.versions !== '-' ? b.versions.split(', ') : ['Sans version'];
-      vers.forEach(v => {
-        const t = v.trim();
-        const g = groupOf(t);
-        (groups[g] ||= new Set()).add(t);
+    const buildOpts = (field, selId, emptyLabel) => {
+      const groups = {};
+      all.forEach(b => {
+        const vers = b[field] && b[field] !== '-' ? b[field].split(', ') : ['Sans version'];
+        vers.forEach(v => { const t = v.trim(); const g = groupOf(t); (groups[g] ||= new Set()).add(t); });
       });
-    });
-    const sel = document.getElementById('f-version');
-    sel.innerHTML = '<option value="">Toutes versions</option>' + GROUP_ORDER
-      .filter(g => groups[g]?.size)
-      .map(g => {
-        const opts = [...groups[g]].sort((a, b) => a === 'Sans version' ? 1 : b === 'Sans version' ? -1 : cmpVer(b, a))
-          .map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
-        return `<optgroup label="${g}">${opts}</optgroup>`;
-      }).join('');
+      const sel = document.getElementById(selId);
+      sel.innerHTML = `<option value="">${emptyLabel}</option>` + GROUP_ORDER
+        .filter(g => groups[g]?.size)
+        .map(g => {
+          const opts = [...groups[g]].sort((a, b) => a === 'Sans version' ? 1 : b === 'Sans version' ? -1 : cmpVer(b, a))
+            .map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+          return `<optgroup label="${g}">${opts}</optgroup>`;
+        }).join('');
+    };
+    buildOpts('versions',    'f-version',    'Toutes versions');
+    buildOpts('fixversions', 'f-fixversion', 'Toutes versions corrigées');
   }
 
   async function loadBugs() {
@@ -770,7 +815,7 @@
     try {
       const params = new URLSearchParams({ domain, email, token });
       if (project) params.set('project', project);
-      if (reporterScope === 'all') params.set('all_reporters', 'true');
+      if (reporterScope === 'all' || reporterScope === 'icar') params.set('all_reporters', 'true');
       if (period === 'custom') {
         const from = document.getElementById('date-from').value;
         const to   = document.getElementById('date-to').value;
@@ -804,7 +849,7 @@
       console.log('Rapporteurs Jira disponibles :', uniqueReporters);
 
       const presentReporters = [...new Set(all.map(b => b.reporter).filter(r => r !== '-'))];
-      const reporters = (reporterScope === 'all' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
+      const reporters = (reporterScope === 'all' || reporterScope === 'icar' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
       const sel = document.getElementById('f-reporter');
       sel.innerHTML = '<option value="">Tous rapporteurs</option>'
         + reporters.map(r => `<option value="${r}">${r}</option>`).join('');
@@ -820,6 +865,53 @@
     }
   }
 
+  function initResizable() {
+    let dragging = false, justDragged = false, startX = 0, startW = 0, activeTh = null, activeHandle = null;
+
+    document.querySelectorAll('#jira-table thead th').forEach(th => {
+      const handle = document.createElement('span');
+      handle.className = 'col-resizer';
+      handle.addEventListener('mousedown', e => {
+        dragging     = true;
+        justDragged  = false;
+        startX       = e.pageX;
+        startW       = th.offsetWidth;
+        activeTh     = th;
+        activeHandle = handle;
+        handle.classList.add('active');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      th.appendChild(handle);
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const newW = Math.max(40, startW + (e.pageX - startX));
+      activeTh.style.width = newW + 'px';
+      const colId = [...activeTh.classList].find(c => c.startsWith('col-'))?.replace('col-', '');
+      const def = colId && COL_DEFS.find(c => c.id === colId);
+      if (def && def.width !== null) def.width = newW + 'px';
+      justDragged = true;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      activeHandle?.classList.remove('active');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      activeTh = activeHandle = null;
+    });
+
+    // Bloque le click qui suit immédiatement un drag (phase capture, avant l'onclick du th)
+    document.addEventListener('click', e => {
+      if (justDragged) { e.stopPropagation(); justDragged = false; }
+    }, true);
+  }
+
   function sort(col) {
     sortAsc = sortCol === col ? !sortAsc : true;
     sortCol = col; render();
@@ -829,20 +921,27 @@
     const search = document.getElementById('search').value.toLowerCase();
     const fr     = document.getElementById('f-reporter').value;
     const vf     = document.getElementById('f-version').value;
+    const vfx    = document.getElementById('f-fixversion').value;
 
     const matchesVersion = b => {
       if (!vf) return true;
       if (vf === 'Sans version') return !b.versions || b.versions === '-';
       return !!b.versions && b.versions !== '-' && b.versions.split(', ').includes(vf);
     };
+    const matchesFixVersion = b => {
+      if (!vfx) return true;
+      if (vfx === 'Sans version') return !b.fixversions || b.fixversions === '-';
+      return !!b.fixversions && b.fixversions !== '-' && b.fixversions.split(', ').includes(vfx);
+    };
 
     const baseFilter = b =>
-      (reporterScope === 'all' || ALLOWED_REPORTERS.includes(b.reporter.toLowerCase())) &&
+      (reporterScope === 'all' || reporterScope === 'icar' || ALLOWED_REPORTERS.includes(b.reporter.toLowerCase())) &&
+      (reporterScope !== 'icar' || b.product.toLowerCase().includes('icar')) &&
       (!search || b.key.toLowerCase().includes(search) || b.summary.toLowerCase().includes(search) || b.reporter.toLowerCase().includes(search) || b.product.toLowerCase().includes(search));
 
-    // Listes sans l'un des deux filtres croisés (servent à garder les panneaux ACTO/Versions complets quand l'autre est sélectionné)
-    const listForVersions = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr));
-    const listForTechs    = all.filter(b => baseFilter(b) && matchesVersion(b));
+    const listForVersions    = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr));
+    const listForFixVersions = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr) && matchesVersion(b));
+    const listForTechs    = all.filter(b => baseFilter(b) && matchesVersion(b) && matchesFixVersion(b));
 
     let list = listForTechs.filter(b => (!fr || b.reporter === fr) && (!filterStatus || filterStatus.includes(b.status))).sort((a, b) => {
       let va = a[sortCol] || '', vb = b[sortCol] || '';
@@ -924,13 +1023,45 @@
         }).join('')
       : '<div class="ver-empty">Aucune version trouvée.</div>';
 
+    // Compteur fix versions — filtré par la version affectée sélectionnée
+    const fixCounts = {};
+    listForFixVersions.forEach(b => {
+      const vers = b.fixversions && b.fixversions !== '-' ? b.fixversions.split(', ') : ['Sans version'];
+      vers.forEach(v => { const t = v.trim(); fixCounts[t] = (fixCounts[t] || 0) + 1; });
+    });
+    const fixGroups = {};
+    Object.entries(fixCounts).forEach(([name, count]) => {
+      const g = groupOf(name);
+      if (!fixGroups[g]) fixGroups[g] = { total: 0, versions: [] };
+      fixGroups[g].total += count;
+      fixGroups[g].versions.push([name, count]);
+    });
+    Object.values(fixGroups).forEach(g => g.versions.sort((a, b) => cmpVer(b[0], a[0])));
+    const sortedFixGroups = Object.entries(fixGroups).sort((a, b) => GROUP_ORDER.indexOf(a[0]) - GROUP_ORDER.indexOf(b[0]));
+    document.getElementById('fixversions-list').innerHTML = sortedFixGroups.length
+      ? sortedFixGroups.map(([gName, { versions }]) => {
+          const maxInGroup = Math.max(1, ...versions.filter(([name]) => name !== 'Sans version').map(([, c]) => c));
+          const rows = versions.map(([name, count]) => {
+            const bar = name === 'Sans version' ? 0 : Math.round(count / maxInGroup * 100);
+            const selected = vfx === name ? ' selected' : '';
+            return `<div class="ver-row${selected}" data-version="${escHtml(name)}" onclick="filterByFixVersion(this.dataset.version)">
+              <div class="ver-row-bar" style="width:${bar}%"></div>
+              <span class="ver-row-name">${escHtml(name)}</span>
+              <span class="ver-row-count">${count}</span>
+            </div>`;
+          }).join('');
+          return `<div class="ver-group-header">${escHtml(gName)}</div>${rows}`;
+        }).join('')
+      : '<div class="ver-empty">Aucune version corrigée trouvée.</div>';
+
     const updateBadge = (id, nameId, val) => {
       const el = document.getElementById(id);
       el.classList.toggle('visible', !!val);
       if (val) document.getElementById(nameId).textContent = val;
     };
-    updateBadge('badge-reporter', 'badge-reporter-name', document.getElementById('f-reporter').value);
-    updateBadge('badge-version',  'badge-version-name',  document.getElementById('f-version').value);
+    updateBadge('badge-reporter',   'badge-reporter-name',   document.getElementById('f-reporter').value);
+    updateBadge('badge-version',    'badge-version-name',    document.getElementById('f-version').value);
+    updateBadge('badge-fixversion', 'badge-fixversion-name', document.getElementById('f-fixversion').value);
 
     document.getElementById('jira-count').textContent = `${total} ticket${total > 1 ? 's' : ''}`;
     document.getElementById('jira-empty').style.display = total ? 'none' : 'flex';
