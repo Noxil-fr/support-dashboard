@@ -230,10 +230,9 @@
   .mtab-pane.active { display: block; }
 
   /* ── Recherche avancée ──────────────────────────────────────── */
-  .pf-modal { max-width: min(96vw, 1180px); }
-  .pf-layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: start; }
-  .pf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .pf-pills-vertical { flex-direction: column; align-items: flex-start; }
+  .pf-modal { max-width: min(97vw, 1420px); }
+  .pf-layout { display: grid; grid-template-columns: 190px 1fr; gap: 20px; align-items: start; }
+  .pf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
   .pf-section { background: #0d1117; border: 1px solid #21262d; border-top: 3px solid #30363d; border-radius: 9px; display: flex; flex-direction: column; overflow: hidden; }
   .pf-accent-blue   { border-top-color: #58a6ff; }
   .pf-accent-purple { border-top-color: #a371f7; }
@@ -245,20 +244,20 @@
   .pf-accent-purple .pf-section-count { color: #a371f7; }
   .pf-accent-red    .pf-section-count { color: #f85149; }
   .pf-accent-green  .pf-section-count { color: #3fb950; }
-  .pf-search { padding: 8px 10px; border-bottom: 1px solid #21262d; }
-  .pf-search input { width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #cdd9e5; font-size: 12px; padding: 6px 10px; outline: none; box-sizing: border-box; transition: border-color .15s; }
+  .pf-search { padding: 9px 12px; border-bottom: 1px solid #21262d; }
+  .pf-search input { width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #cdd9e5; font-size: 12.5px; padding: 7px 11px; outline: none; box-sizing: border-box; transition: border-color .15s; }
   .pf-search input:focus { border-color: #58a6ff; }
-  .pf-list { max-height: 200px; overflow-y: auto; padding: 5px; }
-  .pf-item { display: flex; align-items: center; gap: 9px; padding: 6px 9px; cursor: pointer; border-radius: 6px; }
+  .pf-list { max-height: 240px; overflow-y: auto; padding: 6px; }
+  .pf-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; cursor: pointer; border-radius: 6px; }
   .pf-item:hover { background: #1c2128; }
   .pf-item input[type=checkbox] { accent-color: #58a6ff; width: 14px; height: 14px; cursor: pointer; flex-shrink: 0; }
-  .pf-item label { font-size: 12.5px; font-weight: 400; text-transform: none; letter-spacing: normal; margin-bottom: 0; color: #cdd9e5; cursor: pointer; user-select: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pf-empty, .pf-loading { font-size: 11.5px; color: #6e7681; padding: 16px 14px; text-align: center; }
-  .pf-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #58a6ff; padding: 9px 9px 4px; }
+  .pf-item label { font-size: 13px; font-weight: 400; text-transform: none; letter-spacing: normal; margin-bottom: 0; color: #cdd9e5; cursor: pointer; user-select: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pf-empty, .pf-loading { font-size: 12px; color: #6e7681; padding: 18px 14px; text-align: center; }
+  .pf-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #58a6ff; padding: 10px 10px 5px; }
   .pf-accent-red   .pf-group-label { color: #f85149; }
   .pf-accent-green .pf-group-label { color: #3fb950; }
-  .pf-pills { display: flex; flex-wrap: wrap; gap: 7px; padding: 12px 14px; }
-  .pf-pill { padding: 5px 13px; border-radius: 14px; font-size: 12px; font-weight: 600; background: #161b22; border: 1px solid #30363d; color: #8b949e; cursor: pointer; user-select: none; transition: all .15s; }
+  .pf-pills { display: flex; flex-wrap: wrap; gap: 7px; padding: 12px; }
+  .pf-pill { padding: 5px 13px; border-radius: 14px; font-size: 12px; font-weight: 600; background: #161b22; border: 1px solid #30363d; color: #8b949e; cursor: pointer; user-select: none; white-space: nowrap; transition: all .15s; }
   .pf-pill:hover { border-color: #58a6ff; color: #cdd9e5; }
   .pf-pill.active { background: #0c1e3a; border-color: #1a3a6b; color: #58a6ff; }
   .pin-inputs { display: flex; gap: 8px; justify-content: center; margin: 20px 0; }
@@ -480,7 +479,7 @@
     <div class="pf-layout">
       <div class="pf-section pf-accent-blue">
         <div class="pf-section-title"><span>Statuts</span><span class="pf-section-count" id="pf-count-status"></span></div>
-        <div class="pf-pills pf-pills-vertical" id="pf-list-status"></div>
+        <div class="pf-pills" id="pf-list-status"></div>
       </div>
 
       <div class="pf-grid">
