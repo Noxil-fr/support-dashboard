@@ -288,7 +288,7 @@
       <div class="filter-sep"></div>
       <input type="text" id="search" placeholder="Rechercher…" oninput="render()">
       <button class="load-btn" id="jira-btn" onclick="loadBugs()">Charger</button>
-      <button class="load-btn" onclick="openPreFilters()" style="background:#1e1232;border:1px solid #5c3a9a;white-space:nowrap"><span id="pf-btn-label">🎯 Options</span></button>
+      <button class="load-btn" onclick="openPreFilters()"><span id="pf-btn-label">🔍 Recherche avancée</span></button>
       <div style="position:relative">
         <button class="load-btn" onclick="toggleColPanel()" id="col-btn" style="background:#1e1232;border:1px solid #5c3a9a;white-space:nowrap">⚗ Filtre</button>
         <div id="col-panel" class="col-panel hidden">
@@ -452,8 +452,8 @@
 <!-- ══════════════════════ MODAL PRÉ-FILTRES ══════════════════════════════── -->
 <div class="overlay hidden" id="overlay-prefilters">
   <div class="modal wide" style="max-width:780px">
-    <h2>🎯 Filtres de chargement</h2>
-    <p>Restreignez les tickets récupérés depuis Jira avant de lancer le chargement.</p>
+    <h2>🔍 Recherche avancée</h2>
+    <p>Restreignez les tickets récupérés depuis Jira. La recherche avancée porte sur toute la période, indépendamment du sélecteur de période.</p>
     <div class="pf-grid">
       <div class="pf-section">
         <div class="pf-section-title"><span>Statuts</span><span class="pf-section-count" id="pf-count-status"></span></div>
@@ -888,7 +888,7 @@
 
   function updatePfButton() {
     const n = pfCount();
-    document.getElementById('pf-btn-label').textContent = n ? `🎯 Options (${n})` : '🎯 Options';
+    document.getElementById('pf-btn-label').textContent = n ? `🔍 Recherche avancée (${n})` : '🔍 Recherche avancée';
   }
 
   function updatePfCount(key) {
@@ -1029,18 +1029,22 @@
     all = [];
     btn.disabled = true;
 
+    const advancedActive = pfCount() > 0;
+
     const baseParams = new URLSearchParams({ domain, email, token });
     if (project) baseParams.set('project', project);
     if (reporterScope === 'all' || reporterScope === 'icar') baseParams.set('all_reporters', 'true');
-    if (period === 'custom') {
-      const from = document.getElementById('date-from').value;
-      const to   = document.getElementById('date-to').value;
-      if (from) baseParams.set('date_from', from);
-      if (to)   baseParams.set('date_to', to);
-    } else if (period === 'year') {
-      baseParams.set('date_from', `${new Date().getFullYear()}-01-01`);
-    } else if (period) {
-      baseParams.set('period', period);
+    if (!advancedActive) {
+      if (period === 'custom') {
+        const from = document.getElementById('date-from').value;
+        const to   = document.getElementById('date-to').value;
+        if (from) baseParams.set('date_from', from);
+        if (to)   baseParams.set('date_to', to);
+      } else if (period === 'year') {
+        baseParams.set('date_from', `${new Date().getFullYear()}-01-01`);
+      } else if (period) {
+        baseParams.set('period', period);
+      }
     }
     if (preFilters.status.length)     baseParams.set('statuses', preFilters.status.join(','));
     if (preFilters.reporter.length)   baseParams.set('reporter_names', preFilters.reporter.join(','));
