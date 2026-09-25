@@ -292,7 +292,7 @@
       </select>
       <div class="filter-sep"></div>
       <input type="text" id="search" placeholder="Rechercher…" oninput="render()">
-      <button class="load-btn" id="jira-btn" onclick="loadBugs()">Charger</button>
+      <button class="load-btn" id="jira-btn" onclick="loadBugs()">Recherche</button>
       <button class="load-btn" onclick="openPreFilters()"><span id="pf-btn-label">🔍 Recherche avancée</span></button>
       <div style="position:relative">
         <button class="load-btn" onclick="toggleColPanel()" id="col-btn" style="background:#1e1232;border:1px solid #5c3a9a;white-space:nowrap">Modifier l'affichage</button>
@@ -1072,7 +1072,7 @@
     } catch(e) {
       if (!aborted) { err.textContent = '⚠ ' + e.message; err.style.display = 'block'; }
     } finally {
-      if (!aborted) { btn.disabled = false; btn.innerHTML = 'Charger'; loadingAbort = null; }
+      if (!aborted) { btn.disabled = false; btn.innerHTML = 'Recherche'; loadingAbort = null; }
     }
   }
 
