@@ -897,6 +897,7 @@
   }
 
   let preFilters = { status: [], reporter: [], assignee: [], version: [], fixversion: [] };
+  let lastLoadWasAdvanced = false;
 
   function pfCount() {
     return Object.values(preFilters).reduce((n, arr) => n + arr.length, 0);
@@ -1033,7 +1034,7 @@
     const countEl = document.getElementById('jira-raw-count');
     countEl.textContent = `${all.length} chargés`;
     const presentReporters = [...new Set(all.map(b => b.reporter).filter(r => r !== '-'))];
-    const reporters = (reporterScope === 'all' || reporterScope === 'icar' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
+    const reporters = (lastLoadWasAdvanced || reporterScope === 'all' || reporterScope === 'icar' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
     const sel = document.getElementById('f-reporter');
     sel.innerHTML = '<option value="">Tous rapporteurs</option>'
       + reporters.map(r => `<option value="${r}">${r}</option>`).join('');
@@ -1067,10 +1068,11 @@
     btn.disabled = true;
 
     const advancedActive = pfCount() > 0;
+    lastLoadWasAdvanced = advancedActive;
 
     const baseParams = new URLSearchParams({ domain, email, token });
     if (project) baseParams.set('project', project);
-    if (reporterScope === 'all' || reporterScope === 'icar') baseParams.set('all_reporters', 'true');
+    if (advancedActive || reporterScope === 'all' || reporterScope === 'icar') baseParams.set('all_reporters', 'true');
     if (!advancedActive) {
       if (period === 'custom') {
         const from = document.getElementById('date-from').value;
@@ -1190,8 +1192,8 @@
     };
 
     const baseFilter = b =>
-      (reporterScope === 'all' || reporterScope === 'icar' || ALLOWED_REPORTERS.includes(b.reporter.toLowerCase())) &&
-      (reporterScope !== 'icar' || b.product.toLowerCase().includes('icar')) &&
+      (lastLoadWasAdvanced || reporterScope === 'all' || reporterScope === 'icar' || ALLOWED_REPORTERS.includes(b.reporter.toLowerCase())) &&
+      (lastLoadWasAdvanced || reporterScope !== 'icar' || b.product.toLowerCase().includes('icar')) &&
       (!search || b.key.toLowerCase().includes(search) || b.summary.toLowerCase().includes(search) || b.reporter.toLowerCase().includes(search) || b.product.toLowerCase().includes(search));
 
     const listForVersions    = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr));
