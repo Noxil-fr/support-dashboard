@@ -1034,13 +1034,12 @@
     }));
   }
 
-  // Appelé après chaque page reçue : mise à jour légère (compteur + tableau) pour un
-  // affichage progressif fluide, sans reconstruire les listes déroulantes à chaque page.
-  function refreshAfterLoad() {
+  // Appelé après chaque page reçue : juste le compteur, pas de re-rendu du tableau
+  // (voir RENDER_EVERY_N_PAGES dans loadBugs pour le rythme de rafraîchissement du tableau).
+  function updateRawCount() {
     document.getElementById('jira-raw-count').textContent = `${all.length} chargés`;
     document.getElementById('jira-stats').style.display = 'flex';
     document.getElementById('jira-stats').style.flexDirection = 'row-reverse';
-    render();
   }
 
   // Appelé une seule fois à la fin du chargement complet : reconstruit les listes
@@ -1104,8 +1103,11 @@
     if (preFilters.version.length)    baseParams.set('versions', preFilters.version.join(','));
     if (preFilters.fixversion.length) baseParams.set('fixversions', preFilters.fixversion.join(','));
 
+    const RENDER_EVERY_N_PAGES = 5; // redessine le tableau toutes les 5 pages plutôt qu'à chaque page
+
     try {
       let nextPageToken = null;
+      let pageCount = 0;
 
       do {
         const params = new URLSearchParams(baseParams);
@@ -1123,11 +1125,14 @@
 
         all.push(...parseIssues(issues, domain));
         nextPageToken = data.nextPageToken ?? null;
+        pageCount++;
 
-        refreshAfterLoad();
+        updateRawCount();
+        if (pageCount === 1 || pageCount % RENDER_EVERY_N_PAGES === 0) render(); // 1re page tout de suite, puis toutes les N
       } while (nextPageToken && all.length < 10000); // garde-fou : plafond dur pour éviter une boucle infinie
 
       finalizeLoad();
+      render();
       document.getElementById('jira-raw-count').textContent = `${all.length} chargés`;
     } catch(e) {
       if (!aborted) { err.textContent = '⚠ ' + e.message; err.style.display = 'block'; }
