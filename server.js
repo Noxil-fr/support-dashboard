@@ -65,7 +65,36 @@ const REPORTERS = [
 const jqlStr  = s => `"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 const jqlList = arr => arr.map(jqlStr).join(',');
 
-// ── Métadonnées (versions, techniciens, rapporteurs) pour les filtres de chargement ──
+// ── Métadonnées (versions, assignés, rapporteurs) pour les filtres de chargement ──
+async function fetchVersions(domain, auth, headers, project) {
+  if (project) {
+    const r = await axios.get(`https://${domain}/rest/api/3/project/${encodeURIComponent(project)}/versions`, { auth, headers, httpsAgent: agent });
+    return (r.data || []).map(v => v.name);
+  }
+  // Pas de projet configuré : on récupère les suggestions JQL, qui ne nécessitent pas de projet.
+  const stripTags = s => String(s).replace(/<\/?[^>]+>/g, '');
+  const [affected, fix] = await Promise.all([
+    axios.get(`https://${domain}/rest/api/3/jql/autocompletedata/suggestions`, { params: { fieldName: 'affectedVersion' }, auth, headers, httpsAgent: agent }).catch(() => ({ data: { results: [] } })),
+    axios.get(`https://${domain}/rest/api/3/jql/autocompletedata/suggestions`, { params: { fieldName: 'fixVersion' }, auth, headers, httpsAgent: agent }).catch(() => ({ data: { results: [] } })),
+  ]);
+  const names = new Set();
+  (affected.data.results || []).forEach(r => names.add(stripTags(r.displayName || r.value)));
+  (fix.data.results || []).forEach(r => names.add(stripTags(r.displayName || r.value)));
+  return [...names];
+}
+
+async function fetchAssignees(domain, auth, headers, project) {
+  if (project) {
+    const r = await axios.get(`https://${domain}/rest/api/3/user/assignable/search`, { params: { project, maxResults: 200 }, auth, headers, httpsAgent: agent }).catch(() => ({ data: [] }));
+    return (r.data || []).map(u => ({ accountId: u.accountId, displayName: u.displayName }));
+  }
+  // Pas de projet configuré : on liste les comptes du site (pas de notion d'assignable hors projet).
+  const r = await axios.get(`https://${domain}/rest/api/3/users/search`, { params: { maxResults: 200 }, auth, headers, httpsAgent: agent }).catch(() => ({ data: [] }));
+  return (r.data || [])
+    .filter(u => u.accountType === 'atlassian' && u.active !== false)
+    .map(u => ({ accountId: u.accountId, displayName: u.displayName }));
+}
+
 app.get('/api/metadata', async (req, res) => {
   const { domain, email, token, project } = req.query;
   if (!domain || !email || !token) {
@@ -75,13 +104,9 @@ app.get('/api/metadata', async (req, res) => {
   const headers = { 'Accept': 'application/json' };
 
   try {
-    const [versionsRes, assigneesRes, reportersRes] = await Promise.all([
-      project
-        ? axios.get(`https://${domain}/rest/api/3/project/${encodeURIComponent(project)}/versions`, { auth, headers, httpsAgent: agent })
-        : Promise.resolve({ data: [] }),
-      axios.get(`https://${domain}/rest/api/3/user/assignable/search`, {
-        params: { project: project || undefined, maxResults: 200 }, auth, headers, httpsAgent: agent
-      }).catch(() => ({ data: [] })),
+    const [versions, assignees, reportersRes] = await Promise.all([
+      fetchVersions(domain, auth, headers, project),
+      fetchAssignees(domain, auth, headers, project),
       Promise.all(REPORTERS.map(accountId =>
         axios.get(`https://${domain}/rest/api/3/user`, { params: { accountId }, auth, headers, httpsAgent: agent })
           .then(r => ({ accountId, displayName: r.data.displayName }))
@@ -90,8 +115,8 @@ app.get('/api/metadata', async (req, res) => {
     ]);
 
     res.json({
-      versions:  (versionsRes.data || []).map(v => v.name).sort(),
-      assignees: (assigneesRes.data || []).map(u => ({ accountId: u.accountId, displayName: u.displayName })).sort((a, b) => a.displayName.localeCompare(b.displayName)),
+      versions:  versions.sort(),
+      assignees: assignees.sort((a, b) => a.displayName.localeCompare(b.displayName)),
       reporters: reportersRes.filter(Boolean).sort((a, b) => a.displayName.localeCompare(b.displayName)),
     });
   } catch (err) {
