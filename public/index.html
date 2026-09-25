@@ -229,21 +229,37 @@
   .mtab-pane { display: none; }
   .mtab-pane.active { display: block; }
 
-  /* ── Pré-filtres de chargement ──────────────────────────────── */
-  .pf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 4px 0 4px; }
-  .pf-section { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
-  .pf-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6e7681; padding: 9px 12px 7px; border-bottom: 1px solid #21262d; display: flex; align-items: center; justify-content: space-between; }
-  .pf-section-count { color: #58a6ff; font-weight: 700; }
-  .pf-search { padding: 6px 8px; border-bottom: 1px solid #21262d; }
-  .pf-search input { width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 5px; color: #cdd9e5; font-size: 11px; padding: 4px 8px; outline: none; box-sizing: border-box; }
+  /* ── Recherche avancée ──────────────────────────────────────── */
+  .pf-modal { max-width: 840px; }
+  .pf-block { margin-bottom: 16px; }
+  .pf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .pf-section { background: #0d1117; border: 1px solid #21262d; border-top: 3px solid #30363d; border-radius: 9px; display: flex; flex-direction: column; overflow: hidden; }
+  .pf-accent-blue   { border-top-color: #58a6ff; }
+  .pf-accent-purple { border-top-color: #a371f7; }
+  .pf-accent-red    { border-top-color: #f85149; }
+  .pf-accent-green  { border-top-color: #3fb950; }
+  .pf-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #8b949e; padding: 10px 14px 9px; border-bottom: 1px solid #21262d; display: flex; align-items: center; justify-content: space-between; }
+  .pf-section-count { background: #161b22; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 9px; min-width: 14px; text-align: center; }
+  .pf-accent-blue   .pf-section-count { color: #58a6ff; }
+  .pf-accent-purple .pf-section-count { color: #a371f7; }
+  .pf-accent-red    .pf-section-count { color: #f85149; }
+  .pf-accent-green  .pf-section-count { color: #3fb950; }
+  .pf-search { padding: 8px 10px; border-bottom: 1px solid #21262d; }
+  .pf-search input { width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #cdd9e5; font-size: 12px; padding: 6px 10px; outline: none; box-sizing: border-box; transition: border-color .15s; }
   .pf-search input:focus { border-color: #58a6ff; }
-  .pf-list { max-height: 190px; overflow-y: auto; padding: 4px 0; }
-  .pf-item { display: flex; align-items: center; gap: 8px; padding: 4px 12px; cursor: pointer; }
+  .pf-list { max-height: 200px; overflow-y: auto; padding: 5px; }
+  .pf-item { display: flex; align-items: center; gap: 9px; padding: 6px 9px; cursor: pointer; border-radius: 6px; }
   .pf-item:hover { background: #1c2128; }
-  .pf-item input[type=checkbox] { accent-color: #58a6ff; width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
-  .pf-item label { font-size: 12px; color: #cdd9e5; cursor: pointer; user-select: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pf-empty, .pf-loading { font-size: 11px; color: #6e7681; padding: 8px 12px; }
-  .pf-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #58a6ff; padding: 7px 12px 3px; }
+  .pf-item input[type=checkbox] { accent-color: #58a6ff; width: 14px; height: 14px; cursor: pointer; flex-shrink: 0; }
+  .pf-item label { font-size: 12.5px; font-weight: 400; text-transform: none; letter-spacing: normal; margin-bottom: 0; color: #cdd9e5; cursor: pointer; user-select: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pf-empty, .pf-loading { font-size: 11.5px; color: #6e7681; padding: 16px 14px; text-align: center; }
+  .pf-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #58a6ff; padding: 9px 9px 4px; }
+  .pf-accent-red   .pf-group-label { color: #f85149; }
+  .pf-accent-green .pf-group-label { color: #3fb950; }
+  .pf-pills { display: flex; flex-wrap: wrap; gap: 7px; padding: 12px 14px; }
+  .pf-pill { padding: 5px 13px; border-radius: 14px; font-size: 12px; font-weight: 600; background: #161b22; border: 1px solid #30363d; color: #8b949e; cursor: pointer; user-select: none; transition: all .15s; }
+  .pf-pill:hover { border-color: #58a6ff; color: #cdd9e5; }
+  .pf-pill.active { background: #0c1e3a; border-color: #1a3a6b; color: #58a6ff; }
   .pin-inputs { display: flex; gap: 8px; justify-content: center; margin: 20px 0; }
   .pin-inputs input { width: 44px; height: 50px; text-align: center; font-size: 20px; font-weight: 700; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; margin: 0; padding: 0; outline: none; }
   .pin-inputs input:focus { border-color: #58a6ff; }
@@ -456,39 +472,44 @@
 
 <!-- ══════════════════════ MODAL PRÉ-FILTRES ══════════════════════════════── -->
 <div class="overlay hidden" id="overlay-prefilters">
-  <div class="modal wide" style="max-width:780px">
+  <div class="modal wide pf-modal">
     <h2>🔍 Recherche avancée</h2>
-    <p>Restreignez les tickets récupérés depuis Jira. La recherche avancée porte sur toute la période, indépendamment du sélecteur de période.</p>
+    <p>Restreignez les tickets récupérés depuis Jira — porte sur toute la période, indépendamment du sélecteur de période.</p>
+
+    <div class="pf-block pf-section pf-accent-blue">
+      <div class="pf-section-title"><span>Statuts</span><span class="pf-section-count" id="pf-count-status"></span></div>
+      <div class="pf-pills" id="pf-list-status"></div>
+    </div>
+
     <div class="pf-grid">
-      <div class="pf-section">
-        <div class="pf-section-title"><span>Statuts</span><span class="pf-section-count" id="pf-count-status"></span></div>
-        <div class="pf-list" id="pf-list-status"></div>
-      </div>
-      <div class="pf-section">
+      <div class="pf-section pf-accent-blue">
         <div class="pf-section-title"><span>Rapporteurs</span><span class="pf-section-count" id="pf-count-reporter"></span></div>
         <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('reporter', this.value)"></div>
         <div class="pf-list" id="pf-list-reporter"><div class="pf-loading">Chargement…</div></div>
       </div>
-      <div class="pf-section">
+      <div class="pf-section pf-accent-purple">
         <div class="pf-section-title"><span>Assigné</span><span class="pf-section-count" id="pf-count-assignee"></span></div>
         <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('assignee', this.value)"></div>
         <div class="pf-list" id="pf-list-assignee"><div class="pf-loading">Chargement…</div></div>
       </div>
-      <div class="pf-section">
+      <div class="pf-section pf-accent-red">
         <div class="pf-section-title"><span>Version affectée</span><span class="pf-section-count" id="pf-count-version"></span></div>
         <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('version', this.value)"></div>
         <div class="pf-list" id="pf-list-version"><div class="pf-loading">Chargement…</div></div>
       </div>
-      <div class="pf-section">
+      <div class="pf-section pf-accent-green">
         <div class="pf-section-title"><span>Version corrigée</span><span class="pf-section-count" id="pf-count-fixversion"></span></div>
         <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('fixversion', this.value)"></div>
         <div class="pf-list" id="pf-list-fixversion"><div class="pf-loading">Chargement…</div></div>
       </div>
     </div>
-    <div class="modal-footer">
+
+    <div class="modal-footer" style="justify-content:space-between">
       <button class="secondary" onclick="pfReset()">Réinitialiser</button>
-      <button class="secondary" onclick="closePreFilters()">Annuler</button>
-      <button class="primary" onclick="pfApplyAndLoad()">Charger</button>
+      <div style="display:flex;gap:10px">
+        <button class="secondary" onclick="closePreFilters()">Annuler</button>
+        <button class="primary" onclick="pfApplyAndLoad()">Rechercher</button>
+      </div>
     </div>
   </div>
 </div>
@@ -928,6 +949,26 @@
     updatePfButton();
   }
 
+  function renderPfPills(key, items) {
+    const box = document.getElementById(`pf-list-${key}`);
+    if (!items.length) { box.innerHTML = '<div class="pf-empty">Aucun élément</div>'; return; }
+    box.innerHTML = items.map(it => {
+      const active = preFilters[key].includes(it.value);
+      return `<span class="pf-pill${active ? ' active' : ''}" data-key="${key}" data-value="${escHtml(it.value)}" onclick="pfTogglePill(this)">${escHtml(it.label)}</span>`;
+    }).join('');
+    updatePfCount(key);
+  }
+
+  function pfTogglePill(el) {
+    const key = el.dataset.key, value = el.dataset.value;
+    const arr = preFilters[key];
+    const i = arr.indexOf(value);
+    if (i === -1) { arr.push(value); el.classList.add('active'); }
+    else { arr.splice(i, 1); el.classList.remove('active'); }
+    updatePfCount(key);
+    updatePfButton();
+  }
+
   function pfFilterList(key, query) {
     const q = query.trim().toLowerCase();
     document.querySelectorAll(`#pf-list-${key} .pf-item`).forEach(item => {
@@ -938,6 +979,7 @@
   function pfReset() {
     preFilters = { status: [], reporter: [], assignee: [], version: [], fixversion: [] };
     document.querySelectorAll('#overlay-prefilters input[type=checkbox]').forEach(c => c.checked = false);
+    document.querySelectorAll('#overlay-prefilters .pf-pill').forEach(p => p.classList.remove('active'));
     ['status','reporter','assignee','version','fixversion'].forEach(updatePfCount);
     updatePfButton();
   }
@@ -950,7 +992,7 @@
     }
     document.getElementById('overlay-prefilters').classList.remove('hidden');
     const notLoadedMsg = 'Aucun élément — chargez des tickets au moins une fois pour peupler cette liste.';
-    renderPfList('status',      PF_STATUSES.map(s => ({ value: s, label: s })));
+    renderPfPills('status',     PF_STATUSES.map(s => ({ value: s, label: s })));
     renderPfList('reporter',    knownValues.reporters.map(r => ({ value: r, label: r })), notLoadedMsg);
     renderPfList('assignee',    knownValues.assignees.map(a => ({ value: a, label: a })), notLoadedMsg);
     renderPfGroupedList('version',     knownValues.versions.map(v => ({ value: v, label: v })), notLoadedMsg);
