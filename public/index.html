@@ -230,9 +230,10 @@
   .mtab-pane.active { display: block; }
 
   /* ── Recherche avancée ──────────────────────────────────────── */
-  .pf-modal { max-width: 840px; }
-  .pf-block { margin-bottom: 16px; }
+  .pf-modal { max-width: min(96vw, 1180px); }
+  .pf-layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: start; }
   .pf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .pf-pills-vertical { flex-direction: column; align-items: flex-start; }
   .pf-section { background: #0d1117; border: 1px solid #21262d; border-top: 3px solid #30363d; border-radius: 9px; display: flex; flex-direction: column; overflow: hidden; }
   .pf-accent-blue   { border-top-color: #58a6ff; }
   .pf-accent-purple { border-top-color: #a371f7; }
@@ -476,31 +477,33 @@
     <h2>🔍 Recherche avancée</h2>
     <p>Restreignez les tickets récupérés depuis Jira — porte sur toute la période, indépendamment du sélecteur de période.</p>
 
-    <div class="pf-block pf-section pf-accent-blue">
-      <div class="pf-section-title"><span>Statuts</span><span class="pf-section-count" id="pf-count-status"></span></div>
-      <div class="pf-pills" id="pf-list-status"></div>
-    </div>
-
-    <div class="pf-grid">
+    <div class="pf-layout">
       <div class="pf-section pf-accent-blue">
-        <div class="pf-section-title"><span>Rapporteurs</span><span class="pf-section-count" id="pf-count-reporter"></span></div>
-        <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('reporter', this.value)"></div>
-        <div class="pf-list" id="pf-list-reporter"><div class="pf-loading">Chargement…</div></div>
+        <div class="pf-section-title"><span>Statuts</span><span class="pf-section-count" id="pf-count-status"></span></div>
+        <div class="pf-pills pf-pills-vertical" id="pf-list-status"></div>
       </div>
-      <div class="pf-section pf-accent-purple">
-        <div class="pf-section-title"><span>Assigné</span><span class="pf-section-count" id="pf-count-assignee"></span></div>
-        <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('assignee', this.value)"></div>
-        <div class="pf-list" id="pf-list-assignee"><div class="pf-loading">Chargement…</div></div>
-      </div>
-      <div class="pf-section pf-accent-red">
-        <div class="pf-section-title"><span>Version affectée</span><span class="pf-section-count" id="pf-count-version"></span></div>
-        <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('version', this.value)"></div>
-        <div class="pf-list" id="pf-list-version"><div class="pf-loading">Chargement…</div></div>
-      </div>
-      <div class="pf-section pf-accent-green">
-        <div class="pf-section-title"><span>Version corrigée</span><span class="pf-section-count" id="pf-count-fixversion"></span></div>
-        <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('fixversion', this.value)"></div>
-        <div class="pf-list" id="pf-list-fixversion"><div class="pf-loading">Chargement…</div></div>
+
+      <div class="pf-grid">
+        <div class="pf-section pf-accent-blue">
+          <div class="pf-section-title"><span>Rapporteurs</span><span class="pf-section-count" id="pf-count-reporter"></span></div>
+          <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('reporter', this.value)"></div>
+          <div class="pf-list" id="pf-list-reporter"><div class="pf-loading">Chargement…</div></div>
+        </div>
+        <div class="pf-section pf-accent-purple">
+          <div class="pf-section-title"><span>Assigné</span><span class="pf-section-count" id="pf-count-assignee"></span></div>
+          <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('assignee', this.value)"></div>
+          <div class="pf-list" id="pf-list-assignee"><div class="pf-loading">Chargement…</div></div>
+        </div>
+        <div class="pf-section pf-accent-red">
+          <div class="pf-section-title"><span>Version affectée</span><span class="pf-section-count" id="pf-count-version"></span></div>
+          <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('version', this.value)"></div>
+          <div class="pf-list" id="pf-list-version"><div class="pf-loading">Chargement…</div></div>
+        </div>
+        <div class="pf-section pf-accent-green">
+          <div class="pf-section-title"><span>Version corrigée</span><span class="pf-section-count" id="pf-count-fixversion"></span></div>
+          <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('fixversion', this.value)"></div>
+          <div class="pf-list" id="pf-list-fixversion"><div class="pf-loading">Chargement…</div></div>
+        </div>
       </div>
     </div>
 
