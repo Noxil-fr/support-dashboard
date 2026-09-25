@@ -46,32 +46,83 @@ app.post('/api/verify-pin', (req, res) => {
   res.json({ ok: req.body.pin === expected });
 });
 
+const REPORTERS = [
+  '62de9675831f463d28e858e5',
+  '62de96759974783acc34b8bb',
+  '61fa62fbf5f5b80070c782b7',
+  '61f2611125edab006a2275fb',
+  '6347a867188e713215502582',
+  '62de96789e39d087ee5be8b9',
+  '62de96799974783acc34b8bf',
+  '712020:e87e8ac7-e08a-4904-b70b-5af3eb773c48',
+  '712020:c9f7bfb1-1073-4069-baa2-de5b210b3108',
+  '62e2375dbc2c449f3d946db2',
+  '63ce4a13d73cd1e44e214942',
+  '712020:64032dae-b609-4479-9505-f03cd5cd1c59',
+  '712020:3e737f29-0bc6-431c-a821-9d4728579348'
+];
+
+const jqlStr  = s => `"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+const jqlList = arr => arr.map(jqlStr).join(',');
+
+// ── Métadonnées (versions, techniciens, rapporteurs) pour les filtres de chargement ──
+app.get('/api/metadata', async (req, res) => {
+  const { domain, email, token, project } = req.query;
+  if (!domain || !email || !token) {
+    return res.status(400).json({ error: 'Paramètres manquants : domain, email, token.' });
+  }
+  const auth    = { username: email, password: token };
+  const headers = { 'Accept': 'application/json' };
+
+  try {
+    const [versionsRes, assigneesRes, reportersRes] = await Promise.all([
+      project
+        ? axios.get(`https://${domain}/rest/api/3/project/${encodeURIComponent(project)}/versions`, { auth, headers, httpsAgent: agent })
+        : Promise.resolve({ data: [] }),
+      axios.get(`https://${domain}/rest/api/3/user/assignable/search`, {
+        params: { project: project || undefined, maxResults: 200 }, auth, headers, httpsAgent: agent
+      }).catch(() => ({ data: [] })),
+      Promise.all(REPORTERS.map(accountId =>
+        axios.get(`https://${domain}/rest/api/3/user`, { params: { accountId }, auth, headers, httpsAgent: agent })
+          .then(r => ({ accountId, displayName: r.data.displayName }))
+          .catch(() => null)
+      ))
+    ]);
+
+    res.json({
+      versions:  (versionsRes.data || []).map(v => v.name).sort(),
+      assignees: (assigneesRes.data || []).map(u => ({ accountId: u.accountId, displayName: u.displayName })).sort((a, b) => a.displayName.localeCompare(b.displayName)),
+      reporters: reportersRes.filter(Boolean).sort((a, b) => a.displayName.localeCompare(b.displayName)),
+    });
+  } catch (err) {
+    const status = err.response?.status || 500;
+    console.error('Jira metadata error:', status, JSON.stringify(err.response?.data));
+    const message = err.response?.data?.errorMessages?.[0] || err.message;
+    res.status(status).json({ error: message });
+  }
+});
+
 // ── Jira ──────────────────────────────────────────────────────────────────────
 app.get('/api/bugs', async (req, res) => {
-  const { domain, email, token, project, period, date_from, date_to, all_reporters } = req.query;
+  const {
+    domain, email, token, project, period, date_from, date_to, all_reporters,
+    statuses, assignee_ids, reporter_ids, versions, fixversions
+  } = req.query;
 
   if (!domain || !email || !token) {
     return res.status(400).json({ error: 'Paramètres manquants : domain, email, token.' });
   }
 
-  const REPORTERS = [
-    '62de9675831f463d28e858e5',
-    '62de96759974783acc34b8bb',
-    '61fa62fbf5f5b80070c782b7',
-    '61f2611125edab006a2275fb',
-    '6347a867188e713215502582',
-    '62de96789e39d087ee5be8b9',
-    '62de96799974783acc34b8bf',
-    '712020:e87e8ac7-e08a-4904-b70b-5af3eb773c48',
-    '712020:c9f7bfb1-1073-4069-baa2-de5b210b3108',
-    '62e2375dbc2c449f3d946db2',
-    '63ce4a13d73cd1e44e214942',
-    '712020:64032dae-b609-4479-9505-f03cd5cd1c59',
-    '712020:3e737f29-0bc6-431c-a821-9d4728579348'
-  ];
-
   const conditions = ['issuetype = Bug'];
-  if (all_reporters !== 'true') conditions.push(`reporter IN (${REPORTERS.join(',')})`);
+  if (reporter_ids) {
+    conditions.push(`reporter IN (${reporter_ids.split(',').join(',')})`);
+  } else if (all_reporters !== 'true') {
+    conditions.push(`reporter IN (${REPORTERS.join(',')})`);
+  }
+  if (assignee_ids) conditions.push(`assignee IN (${assignee_ids.split(',').join(',')})`);
+  if (statuses)     conditions.push(`status IN (${jqlList(statuses.split(','))})`);
+  if (versions)     conditions.push(`affectedVersion IN (${jqlList(versions.split(','))})`);
+  if (fixversions)  conditions.push(`fixVersion IN (${jqlList(fixversions.split(','))})`);
   if (project) conditions.push(`project = "${project}"`);
   if (date_from) {
     conditions.push(`created >= "${date_from}"`);
