@@ -507,7 +507,10 @@
     </div>
 
     <div class="modal-footer" style="justify-content:space-between">
-      <button class="secondary" onclick="pfReset()">Réinitialiser</button>
+      <div style="display:flex;gap:10px">
+        <button class="secondary" onclick="pfReset()">Réinitialiser</button>
+        <button class="secondary" onclick="pfPurgeKnownValues()" style="color:#f85149;border-color:#5c1a1a" title="Vide les listes de rapporteurs/assignés/versions mémorisées">🗑 Purger les listes</button>
+      </div>
       <div style="display:flex;gap:10px">
         <button class="secondary" onclick="closePreFilters()">Annuler</button>
         <button class="primary" onclick="pfApplyAndLoad()">Rechercher</button>
@@ -990,6 +993,23 @@
     updatePfButton();
   }
 
+  function pfPurgeKnownValues() {
+    if (!confirm('Purger les listes de rapporteurs, assignés et versions mémorisées ? Elles se reconstruiront au prochain chargement de tickets.')) return;
+    knownValues = { reporters: [], assignees: [], versions: [], fixversions: [] };
+    try { localStorage.removeItem(KNOWN_VALUES_KEY); } catch {}
+    preFilters.reporter = [];
+    preFilters.assignee = [];
+    preFilters.version = [];
+    preFilters.fixversion = [];
+    const notLoadedMsg = 'Aucun élément — chargez des tickets au moins une fois pour peupler cette liste.';
+    renderPfList('reporter',   [], notLoadedMsg);
+    renderPfList('assignee',   [], notLoadedMsg);
+    renderPfGroupedList('version',    [], notLoadedMsg);
+    renderPfGroupedList('fixversion', [], notLoadedMsg);
+    ['reporter','assignee','version','fixversion'].forEach(updatePfCount);
+    updatePfButton();
+  }
+
   function openPreFilters() {
     if (!CFG.jira_domain || !CFG.jira_token) {
       document.getElementById('jira-err').textContent = '⚠ Configuration manquante — cliquez sur ⚙ Configuration.';
@@ -1034,25 +1054,13 @@
     }));
   }
 
-  // Appelé après chaque page reçue : juste le compteur, pas de re-rendu du tableau
-  // (voir RENDER_EVERY_N_PAGES dans loadBugs pour le rythme de rafraîchissement du tableau).
-  function updateRawCount() {
-    document.getElementById('jira-raw-count').textContent = `${all.length} chargés`;
-    document.getElementById('jira-stats').style.display = 'flex';
-    document.getElementById('jira-stats').style.flexDirection = 'row-reverse';
-  }
-
-  // Appelé une seule fois à la fin du chargement complet : reconstruit les listes
-  // déroulantes et le cache des valeurs connues, en préservant la sélection en cours.
   function finalizeLoad() {
     mergeKnownValues();
     const presentReporters = [...new Set(all.map(b => b.reporter).filter(r => r !== '-'))];
     const reporters = (lastLoadWasAdvanced || reporterScope === 'all' || reporterScope === 'icar' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
     const sel = document.getElementById('f-reporter');
-    const prevReporter = sel.value;
     sel.innerHTML = '<option value="">Tous rapporteurs</option>'
       + reporters.map(r => `<option value="${r}">${r}</option>`).join('');
-    if (prevReporter && reporters.includes(prevReporter)) sel.value = prevReporter;
     buildVersionOptions();
   }
 
@@ -1076,64 +1084,45 @@
     let aborted = false;
     loadingAbort = () => { aborted = true; };
 
-    all = [];
-    btn.disabled = true;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Chargement…';
 
     const advancedActive = pfCount() > 0;
     lastLoadWasAdvanced = advancedActive;
 
-    const baseParams = new URLSearchParams({ domain, email, token });
-    if (project) baseParams.set('project', project);
-    if (advancedActive || reporterScope === 'all' || reporterScope === 'icar') baseParams.set('all_reporters', 'true');
+    const params = new URLSearchParams({ domain, email, token });
+    if (project) params.set('project', project);
+    if (advancedActive || reporterScope === 'all' || reporterScope === 'icar') params.set('all_reporters', 'true');
     if (!advancedActive) {
       if (period === 'custom') {
         const from = document.getElementById('date-from').value;
         const to   = document.getElementById('date-to').value;
-        if (from) baseParams.set('date_from', from);
-        if (to)   baseParams.set('date_to', to);
+        if (from) params.set('date_from', from);
+        if (to)   params.set('date_to', to);
       } else if (period === 'year') {
-        baseParams.set('date_from', `${new Date().getFullYear()}-01-01`);
+        params.set('date_from', `${new Date().getFullYear()}-01-01`);
       } else if (period) {
-        baseParams.set('period', period);
+        params.set('period', period);
       }
     }
-    if (preFilters.status.length)     baseParams.set('statuses', preFilters.status.join(','));
-    if (preFilters.reporter.length)   baseParams.set('reporter_ids', preFilters.reporter.join(','));
-    if (preFilters.assignee.length)   baseParams.set('assignee_ids', preFilters.assignee.join(','));
-    if (preFilters.version.length)    baseParams.set('versions', preFilters.version.join(','));
-    if (preFilters.fixversion.length) baseParams.set('fixversions', preFilters.fixversion.join(','));
-
-    const RENDER_EVERY_N_PAGES = 5; // redessine le tableau toutes les 5 pages plutôt qu'à chaque page
+    if (preFilters.status.length)     params.set('statuses', preFilters.status.join(','));
+    if (preFilters.reporter.length)   params.set('reporter_ids', preFilters.reporter.join(','));
+    if (preFilters.assignee.length)   params.set('assignee_ids', preFilters.assignee.join(','));
+    if (preFilters.version.length)    params.set('versions', preFilters.version.join(','));
+    if (preFilters.fixversion.length) params.set('fixversions', preFilters.fixversion.join(','));
 
     try {
-      let nextPageToken = null;
-      let pageCount = 0;
+      const res  = await fetch(`/api/bugs?${params}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+      if (aborted) return;
 
-      do {
-        const params = new URLSearchParams(baseParams);
-        if (nextPageToken) params.set('next_page_token', nextPageToken);
-
-        btn.innerHTML = `<span class="spinner"></span>${all.length > 0 ? all.length + ' — suite…' : 'Chargement…'}`;
-
-        const res  = await fetch(`/api/bugs?${params}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
-        if (aborted) return;
-
-        const issues = data.issues || [];
-        if (!issues.length) break; // garde-fou : page vide = on arrête, même si un nextPageToken est fourni
-
-        all.push(...parseIssues(issues, domain));
-        nextPageToken = data.nextPageToken ?? null;
-        pageCount++;
-
-        updateRawCount();
-        if (pageCount === 1 || pageCount % RENDER_EVERY_N_PAGES === 0) render(); // 1re page tout de suite, puis toutes les N
-      } while (nextPageToken && all.length < 10000); // garde-fou : plafond dur pour éviter une boucle infinie
-
+      all = parseIssues(data.issues || [], domain);
       finalizeLoad();
-      render();
+
       document.getElementById('jira-raw-count').textContent = `${all.length} chargés`;
+      document.getElementById('jira-stats').style.display = 'flex';
+      document.getElementById('jira-stats').style.flexDirection = 'row-reverse';
+      render();
     } catch(e) {
       if (!aborted) { err.textContent = '⚠ ' + e.message; err.style.display = 'block'; }
     } finally {
