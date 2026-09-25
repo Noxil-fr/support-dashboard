@@ -65,73 +65,11 @@ const REPORTERS = [
 const jqlStr  = s => `"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 const jqlList = arr => arr.map(jqlStr).join(',');
 
-// ── Métadonnées (versions, assignés, rapporteurs) pour les filtres de chargement ──
-async function fetchVersions(domain, auth, headers, project) {
-  if (project) {
-    const r = await axios.get(`https://${domain}/rest/api/3/project/${encodeURIComponent(project)}/versions`, { auth, headers, httpsAgent: agent });
-    return (r.data || []).map(v => v.name);
-  }
-  // Pas de projet configuré : on récupère les suggestions JQL, qui ne nécessitent pas de projet.
-  const stripTags = s => String(s).replace(/<\/?[^>]+>/g, '');
-  const [affected, fix] = await Promise.all([
-    axios.get(`https://${domain}/rest/api/3/jql/autocompletedata/suggestions`, { params: { fieldName: 'affectedVersion' }, auth, headers, httpsAgent: agent }).catch(() => ({ data: { results: [] } })),
-    axios.get(`https://${domain}/rest/api/3/jql/autocompletedata/suggestions`, { params: { fieldName: 'fixVersion' }, auth, headers, httpsAgent: agent }).catch(() => ({ data: { results: [] } })),
-  ]);
-  const names = new Set();
-  (affected.data.results || []).forEach(r => names.add(stripTags(r.displayName || r.value)));
-  (fix.data.results || []).forEach(r => names.add(stripTags(r.displayName || r.value)));
-  return [...names];
-}
-
-async function fetchAssignees(domain, auth, headers, project) {
-  if (project) {
-    const r = await axios.get(`https://${domain}/rest/api/3/user/assignable/search`, { params: { project, maxResults: 200 }, auth, headers, httpsAgent: agent }).catch(() => ({ data: [] }));
-    return (r.data || []).map(u => ({ accountId: u.accountId, displayName: u.displayName }));
-  }
-  // Pas de projet configuré : on liste les comptes du site (pas de notion d'assignable hors projet).
-  const r = await axios.get(`https://${domain}/rest/api/3/users/search`, { params: { maxResults: 200 }, auth, headers, httpsAgent: agent }).catch(() => ({ data: [] }));
-  return (r.data || [])
-    .filter(u => u.accountType === 'atlassian' && u.active !== false)
-    .map(u => ({ accountId: u.accountId, displayName: u.displayName }));
-}
-
-app.get('/api/metadata', async (req, res) => {
-  const { domain, email, token, project } = req.query;
-  if (!domain || !email || !token) {
-    return res.status(400).json({ error: 'Paramètres manquants : domain, email, token.' });
-  }
-  const auth    = { username: email, password: token };
-  const headers = { 'Accept': 'application/json' };
-
-  try {
-    const [versions, assignees, reportersRes] = await Promise.all([
-      fetchVersions(domain, auth, headers, project),
-      fetchAssignees(domain, auth, headers, project),
-      Promise.all(REPORTERS.map(accountId =>
-        axios.get(`https://${domain}/rest/api/3/user`, { params: { accountId }, auth, headers, httpsAgent: agent })
-          .then(r => ({ accountId, displayName: r.data.displayName }))
-          .catch(() => null)
-      ))
-    ]);
-
-    res.json({
-      versions:  versions.sort(),
-      assignees: assignees.sort((a, b) => a.displayName.localeCompare(b.displayName)),
-      reporters: reportersRes.filter(Boolean).sort((a, b) => a.displayName.localeCompare(b.displayName)),
-    });
-  } catch (err) {
-    const status = err.response?.status || 500;
-    console.error('Jira metadata error:', status, JSON.stringify(err.response?.data));
-    const message = err.response?.data?.errorMessages?.[0] || err.message;
-    res.status(status).json({ error: message });
-  }
-});
-
 // ── Jira ──────────────────────────────────────────────────────────────────────
 app.get('/api/bugs', async (req, res) => {
   const {
     domain, email, token, project, period, date_from, date_to, all_reporters,
-    statuses, assignee_ids, reporter_ids, versions, fixversions
+    statuses, assignee_names, reporter_names, versions, fixversions
   } = req.query;
 
   if (!domain || !email || !token) {
@@ -139,15 +77,15 @@ app.get('/api/bugs', async (req, res) => {
   }
 
   const conditions = ['issuetype = Bug'];
-  if (reporter_ids) {
-    conditions.push(`reporter IN (${reporter_ids.split(',').join(',')})`);
+  if (reporter_names) {
+    conditions.push(`reporter IN (${jqlList(reporter_names.split(','))})`);
   } else if (all_reporters !== 'true') {
     conditions.push(`reporter IN (${REPORTERS.join(',')})`);
   }
-  if (assignee_ids) conditions.push(`assignee IN (${assignee_ids.split(',').join(',')})`);
-  if (statuses)     conditions.push(`status IN (${jqlList(statuses.split(','))})`);
-  if (versions)     conditions.push(`affectedVersion IN (${jqlList(versions.split(','))})`);
-  if (fixversions)  conditions.push(`fixVersion IN (${jqlList(fixversions.split(','))})`);
+  if (assignee_names) conditions.push(`assignee IN (${jqlList(assignee_names.split(','))})`);
+  if (statuses)       conditions.push(`status IN (${jqlList(statuses.split(','))})`);
+  if (versions)       conditions.push(`affectedVersion IN (${jqlList(versions.split(','))})`);
+  if (fixversions)    conditions.push(`fixVersion IN (${jqlList(fixversions.split(','))})`);
   if (project) conditions.push(`project = "${project}"`);
   if (date_from) {
     conditions.push(`created >= "${date_from}"`);

@@ -851,9 +851,34 @@
   }
 
   const PF_STATUSES = ['Backlog','À faire','Pending Support','Pending Customer','Pending IT','Pending Test','En cours','Blocked','Revue en cours','Ready to be Released','Terminé(e)','Ceased','Rejeté','Résolu'];
+  const KNOWN_VALUES_KEY = 'pf_known_values';
+
+  function loadKnownValues() {
+    try {
+      const raw = localStorage.getItem(KNOWN_VALUES_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { reporters: [], assignees: [], versions: [], fixversions: [] };
+  }
+
+  let knownValues = loadKnownValues();
+
+  function mergeKnownValues() {
+    const add = (arr, val) => { if (val && val !== '-' && !arr.includes(val)) arr.push(val); };
+    all.forEach(b => {
+      add(knownValues.reporters, b.reporter);
+      add(knownValues.assignees, b.assignee);
+      (b.versions    !== '-' ? b.versions.split(', ')    : []).forEach(v => add(knownValues.versions,    v.trim()));
+      (b.fixversions !== '-' ? b.fixversions.split(', ') : []).forEach(v => add(knownValues.fixversions, v.trim()));
+    });
+    knownValues.reporters.sort();
+    knownValues.assignees.sort();
+    knownValues.versions.sort((a, b) => cmpVer(b, a));
+    knownValues.fixversions.sort((a, b) => cmpVer(b, a));
+    try { localStorage.setItem(KNOWN_VALUES_KEY, JSON.stringify(knownValues)); } catch {}
+  }
 
   let preFilters = { status: [], reporter: [], assignee: [], version: [], fixversion: [] };
-  let pfMeta = null;
 
   function pfCount() {
     return Object.values(preFilters).reduce((n, arr) => n + arr.length, 0);
@@ -869,9 +894,9 @@
     if (el) el.textContent = preFilters[key].length ? String(preFilters[key].length) : '';
   }
 
-  function renderPfList(key, items) {
+  function renderPfList(key, items, emptyMsg) {
     const box = document.getElementById(`pf-list-${key}`);
-    if (!items.length) { box.innerHTML = '<div class="pf-empty">Aucun élément</div>'; return; }
+    if (!items.length) { box.innerHTML = `<div class="pf-empty">${emptyMsg || 'Aucun élément'}</div>`; return; }
     box.innerHTML = items.map((it, idx) => {
       const checked = preFilters[key].includes(it.value);
       const id = `pf-${key}-${idx}`;
@@ -907,35 +932,19 @@
     updatePfButton();
   }
 
-  async function openPreFilters() {
+  function openPreFilters() {
     if (!CFG.jira_domain || !CFG.jira_token) {
       document.getElementById('jira-err').textContent = '⚠ Configuration manquante — cliquez sur ⚙ Configuration.';
       document.getElementById('jira-err').style.display = 'block';
       return;
     }
     document.getElementById('overlay-prefilters').classList.remove('hidden');
-    renderPfList('status', PF_STATUSES.map(s => ({ value: s, label: s })));
-
-    if (!pfMeta) {
-      try {
-        const params = new URLSearchParams({ domain: CFG.jira_domain, email: CFG.jira_email, token: CFG.jira_token });
-        if (CFG.jira_project) params.set('project', CFG.jira_project);
-        const res  = await fetch(`/api/metadata?${params}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
-        pfMeta = data;
-      } catch(e) {
-        ['reporter','assignee','version','fixversion'].forEach(k => {
-          document.getElementById(`pf-list-${k}`).innerHTML = `<div class="pf-empty">⚠ ${escHtml(e.message)}</div>`;
-        });
-        return;
-      }
-    }
-
-    renderPfList('reporter',   pfMeta.reporters.map(r => ({ value: r.accountId, label: r.displayName })));
-    renderPfList('assignee',   pfMeta.assignees.map(a => ({ value: a.accountId, label: a.displayName })));
-    renderPfList('version',    pfMeta.versions.map(v => ({ value: v, label: v })));
-    renderPfList('fixversion', pfMeta.versions.map(v => ({ value: v, label: v })));
+    const notLoadedMsg = 'Aucun élément — chargez des tickets au moins une fois pour peupler cette liste.';
+    renderPfList('status',      PF_STATUSES.map(s => ({ value: s, label: s })));
+    renderPfList('reporter',    knownValues.reporters.map(r => ({ value: r, label: r })), notLoadedMsg);
+    renderPfList('assignee',    knownValues.assignees.map(a => ({ value: a, label: a })), notLoadedMsg);
+    renderPfList('version',     knownValues.versions.map(v => ({ value: v, label: v })), notLoadedMsg);
+    renderPfList('fixversion',  knownValues.fixversions.map(v => ({ value: v, label: v })), notLoadedMsg);
   }
 
   function closePreFilters() {
@@ -966,6 +975,7 @@
   }
 
   function refreshAfterLoad() {
+    mergeKnownValues();
     const countEl = document.getElementById('jira-raw-count');
     countEl.textContent = `${all.length} chargés`;
     const presentReporters = [...new Set(all.map(b => b.reporter).filter(r => r !== '-'))];
@@ -1016,8 +1026,8 @@
       baseParams.set('period', period);
     }
     if (preFilters.status.length)     baseParams.set('statuses', preFilters.status.join(','));
-    if (preFilters.reporter.length)   baseParams.set('reporter_ids', preFilters.reporter.join(','));
-    if (preFilters.assignee.length)   baseParams.set('assignee_ids', preFilters.assignee.join(','));
+    if (preFilters.reporter.length)   baseParams.set('reporter_names', preFilters.reporter.join(','));
+    if (preFilters.assignee.length)   baseParams.set('assignee_names', preFilters.assignee.join(','));
     if (preFilters.version.length)    baseParams.set('versions', preFilters.version.join(','));
     if (preFilters.fixversion.length) baseParams.set('fixversions', preFilters.fixversion.join(','));
 
