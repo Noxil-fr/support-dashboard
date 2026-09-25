@@ -89,7 +89,7 @@ async function resolveStatusIds(domain, auth, headers, names) {
 app.get('/api/bugs', async (req, res) => {
   const {
     domain, email, token, project, period, date_from, date_to, all_reporters,
-    statuses, assignee_names, reporter_names, versions, fixversions
+    statuses, assignee_ids, reporter_ids, versions, fixversions
   } = req.query;
 
   if (!domain || !email || !token) {
@@ -101,15 +101,17 @@ app.get('/api/bugs', async (req, res) => {
 
   try {
     const conditions = ['issuetype = Bug'];
-    if (reporter_names) {
-      conditions.push(`reporter IN (${jqlList(reporter_names.split(','))})`);
+    if (reporter_ids) {
+      conditions.push(`reporter IN (${reporter_ids.split(',').join(',')})`);
     } else if (all_reporters !== 'true') {
       conditions.push(`reporter IN (${REPORTERS.join(',')})`);
     }
-    if (assignee_names) conditions.push(`assignee IN (${jqlList(assignee_names.split(','))})`);
+    if (assignee_ids) conditions.push(`assignee IN (${assignee_ids.split(',').join(',')})`);
     if (statuses) {
       const ids = await resolveStatusIds(domain, auth, headers, statuses.split(','));
-      if (ids.length) conditions.push(`status IN (${ids.join(',')})`);
+      // ids.length === 0 means no requested status name matched a real Jira status: force
+      // zero results (status IN (-1)) instead of silently dropping the filter and matching everything.
+      conditions.push(`status IN (${ids.length ? ids.join(',') : '-1'})`);
     }
     if (versions)     conditions.push(`affectedVersion IN (${jqlList(versions.split(','))})`);
     if (fixversions)  conditions.push(`fixVersion IN (${jqlList(fixversions.split(','))})`);

@@ -856,6 +856,7 @@
         vers.forEach(v => { const t = v.trim(); const g = groupOf(t); (groups[g] ||= new Set()).add(t); });
       });
       const sel = document.getElementById(selId);
+      const prevValue = sel.value;
       sel.innerHTML = `<option value="">${emptyLabel}</option>` + GROUP_ORDER
         .filter(g => groups[g]?.size)
         .map(g => {
@@ -863,13 +864,14 @@
             .map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
           return `<optgroup label="${g}">${opts}</optgroup>`;
         }).join('');
+      if (prevValue && [...sel.options].some(o => o.value === prevValue)) sel.value = prevValue;
     };
     buildOpts('versions',    'f-version',    'Toutes versions');
     buildOpts('fixversions', 'f-fixversion', 'Toutes versions corrigées');
   }
 
   const PF_STATUSES = ['Backlog','À faire','Pending Support','Pending Customer','Pending IT','Pending Test','En cours','Blocked','Revue en cours','Ready to be Released','Terminé(e)','Ceased','Rejeté','Résolu'];
-  const KNOWN_VALUES_KEY = 'pf_known_values';
+  const KNOWN_VALUES_KEY = 'pf_known_values_v2';
 
   function loadKnownValues() {
     try {
@@ -882,15 +884,16 @@
   let knownValues = loadKnownValues();
 
   function mergeKnownValues() {
-    const add = (arr, val) => { if (val && val !== '-' && !arr.includes(val)) arr.push(val); };
+    const addPlain = (arr, val) => { if (val && val !== '-' && !arr.includes(val)) arr.push(val); };
+    const addNamed = (arr, id, name) => { if (id && name && name !== '-' && !arr.some(x => x.id === id)) arr.push({ id, name }); };
     all.forEach(b => {
-      add(knownValues.reporters, b.reporter);
-      add(knownValues.assignees, b.assignee);
-      (b.versions    !== '-' ? b.versions.split(', ')    : []).forEach(v => add(knownValues.versions,    v.trim()));
-      (b.fixversions !== '-' ? b.fixversions.split(', ') : []).forEach(v => add(knownValues.fixversions, v.trim()));
+      addNamed(knownValues.reporters, b.reporterId, b.reporter);
+      addNamed(knownValues.assignees, b.assigneeId, b.assignee);
+      (b.versions    !== '-' ? b.versions.split(', ')    : []).forEach(v => addPlain(knownValues.versions,    v.trim()));
+      (b.fixversions !== '-' ? b.fixversions.split(', ') : []).forEach(v => addPlain(knownValues.fixversions, v.trim()));
     });
-    knownValues.reporters.sort();
-    knownValues.assignees.sort();
+    knownValues.reporters.sort((a, b) => a.name.localeCompare(b.name));
+    knownValues.assignees.sort((a, b) => a.name.localeCompare(b.name));
     knownValues.versions.sort((a, b) => cmpVer(b, a));
     knownValues.fixversions.sort((a, b) => cmpVer(b, a));
     try { localStorage.setItem(KNOWN_VALUES_KEY, JSON.stringify(knownValues)); } catch {}
@@ -996,8 +999,8 @@
     document.getElementById('overlay-prefilters').classList.remove('hidden');
     const notLoadedMsg = 'Aucun élément — chargez des tickets au moins une fois pour peupler cette liste.';
     renderPfPills('status',     PF_STATUSES.map(s => ({ value: s, label: s })));
-    renderPfList('reporter',    knownValues.reporters.map(r => ({ value: r, label: r })), notLoadedMsg);
-    renderPfList('assignee',    knownValues.assignees.map(a => ({ value: a, label: a })), notLoadedMsg);
+    renderPfList('reporter',    knownValues.reporters.map(r => ({ value: r.id, label: r.name })), notLoadedMsg);
+    renderPfList('assignee',    knownValues.assignees.map(a => ({ value: a.id, label: a.name })), notLoadedMsg);
     renderPfGroupedList('version',     knownValues.versions.map(v => ({ value: v, label: v })), notLoadedMsg);
     renderPfGroupedList('fixversion',  knownValues.fixversions.map(v => ({ value: v, label: v })), notLoadedMsg);
   }
@@ -1020,7 +1023,9 @@
       summary:     i.fields.summary || '',
       status:      i.fields.status?.name || '-',
       reporter:    i.fields.reporter?.displayName || '-',
+      reporterId:  i.fields.reporter?.accountId || null,
       assignee:    i.fields.assignee?.displayName || '-',
+      assigneeId:  i.fields.assignee?.accountId || null,
       product:     i.fields.customfield_10136?.value || '-',
       versions:    (i.fields.versions    || []).map(v => v.name).join(', ') || '-',
       fixversions: (i.fields.fixVersions || []).map(v => v.name).join(', ') || '-',
@@ -1029,19 +1034,27 @@
     }));
   }
 
+  // Appelé après chaque page reçue : mise à jour légère (compteur + tableau) pour un
+  // affichage progressif fluide, sans reconstruire les listes déroulantes à chaque page.
   function refreshAfterLoad() {
-    mergeKnownValues();
-    const countEl = document.getElementById('jira-raw-count');
-    countEl.textContent = `${all.length} chargés`;
-    const presentReporters = [...new Set(all.map(b => b.reporter).filter(r => r !== '-'))];
-    const reporters = (lastLoadWasAdvanced || reporterScope === 'all' || reporterScope === 'icar' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
-    const sel = document.getElementById('f-reporter');
-    sel.innerHTML = '<option value="">Tous rapporteurs</option>'
-      + reporters.map(r => `<option value="${r}">${r}</option>`).join('');
-    buildVersionOptions();
+    document.getElementById('jira-raw-count').textContent = `${all.length} chargés`;
     document.getElementById('jira-stats').style.display = 'flex';
     document.getElementById('jira-stats').style.flexDirection = 'row-reverse';
     render();
+  }
+
+  // Appelé une seule fois à la fin du chargement complet : reconstruit les listes
+  // déroulantes et le cache des valeurs connues, en préservant la sélection en cours.
+  function finalizeLoad() {
+    mergeKnownValues();
+    const presentReporters = [...new Set(all.map(b => b.reporter).filter(r => r !== '-'))];
+    const reporters = (lastLoadWasAdvanced || reporterScope === 'all' || reporterScope === 'icar' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
+    const sel = document.getElementById('f-reporter');
+    const prevReporter = sel.value;
+    sel.innerHTML = '<option value="">Tous rapporteurs</option>'
+      + reporters.map(r => `<option value="${r}">${r}</option>`).join('');
+    if (prevReporter && reporters.includes(prevReporter)) sel.value = prevReporter;
+    buildVersionOptions();
   }
 
   async function loadBugs() {
@@ -1086,14 +1099,13 @@
       }
     }
     if (preFilters.status.length)     baseParams.set('statuses', preFilters.status.join(','));
-    if (preFilters.reporter.length)   baseParams.set('reporter_names', preFilters.reporter.join(','));
-    if (preFilters.assignee.length)   baseParams.set('assignee_names', preFilters.assignee.join(','));
+    if (preFilters.reporter.length)   baseParams.set('reporter_ids', preFilters.reporter.join(','));
+    if (preFilters.assignee.length)   baseParams.set('assignee_ids', preFilters.assignee.join(','));
     if (preFilters.version.length)    baseParams.set('versions', preFilters.version.join(','));
     if (preFilters.fixversion.length) baseParams.set('fixversions', preFilters.fixversion.join(','));
 
     try {
       let nextPageToken = null;
-      let pageNum = 0;
 
       do {
         const params = new URLSearchParams(baseParams);
@@ -1106,15 +1118,17 @@
         if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
         if (aborted) return;
 
-        all.push(...parseIssues(data.issues || [], domain));
+        const issues = data.issues || [];
+        if (!issues.length) break; // garde-fou : page vide = on arrête, même si un nextPageToken est fourni
+
+        all.push(...parseIssues(issues, domain));
         nextPageToken = data.nextPageToken ?? null;
-        pageNum++;
 
         refreshAfterLoad();
-      } while (nextPageToken);
+      } while (nextPageToken && all.length < 10000); // garde-fou : plafond dur pour éviter une boucle infinie
 
-      const countEl = document.getElementById('jira-raw-count');
-      countEl.textContent = `${all.length} chargés`;
+      finalizeLoad();
+      document.getElementById('jira-raw-count').textContent = `${all.length} chargés`;
     } catch(e) {
       if (!aborted) { err.textContent = '⚠ ' + e.message; err.style.display = 'block'; }
     } finally {
