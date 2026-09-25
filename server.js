@@ -65,6 +65,26 @@ const REPORTERS = [
 const jqlStr  = s => `"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 const jqlList = arr => arr.map(jqlStr).join(',');
 
+// Jira's JQL search endpoint unreliably matches `status = "Name"` by display name
+// (returns 0 results for some accented/duplicated status names), so we resolve
+// names to their numeric status IDs first and filter by ID instead.
+const statusCache = new Map(); // domain -> { data: [{id,name}], ts }
+const STATUS_CACHE_TTL = 10 * 60 * 1000;
+
+async function resolveStatusIds(domain, auth, headers, names) {
+  let cached = statusCache.get(domain);
+  if (!cached || Date.now() - cached.ts > STATUS_CACHE_TTL) {
+    const r = await axios.get(`https://${domain}/rest/api/3/status`, { auth, headers, httpsAgent: agent });
+    cached = { data: r.data.map(s => ({ id: s.id, name: s.name })), ts: Date.now() };
+    statusCache.set(domain, cached);
+  }
+  const ids = [];
+  names.forEach(name => {
+    cached.data.filter(s => s.name === name).forEach(s => { if (!ids.includes(s.id)) ids.push(s.id); });
+  });
+  return ids;
+}
+
 // ── Jira ──────────────────────────────────────────────────────────────────────
 app.get('/api/bugs', async (req, res) => {
   const {
@@ -76,41 +96,42 @@ app.get('/api/bugs', async (req, res) => {
     return res.status(400).json({ error: 'Paramètres manquants : domain, email, token.' });
   }
 
-  const conditions = ['issuetype = Bug'];
-  if (reporter_names) {
-    conditions.push(`reporter IN (${jqlList(reporter_names.split(','))})`);
-  } else if (all_reporters !== 'true') {
-    conditions.push(`reporter IN (${REPORTERS.join(',')})`);
-  }
-  if (assignee_names) conditions.push(`assignee IN (${jqlList(assignee_names.split(','))})`);
-  if (statuses)       conditions.push(`status IN (${jqlList(statuses.split(','))})`);
-  if (versions)       conditions.push(`affectedVersion IN (${jqlList(versions.split(','))})`);
-  if (fixversions)    conditions.push(`fixVersion IN (${jqlList(fixversions.split(','))})`);
-  if (project) conditions.push(`project = "${project}"`);
-  if (date_from) {
-    conditions.push(`created >= "${date_from}"`);
-    if (date_to) conditions.push(`created <= "${date_to}"`);
-  } else if (period) {
-    const since = new Date(Date.now() - Number(period) * 24 * 60 * 60 * 1000);
-    const pad = n => String(n).padStart(2, '0');
-    const dateStr = `${since.getFullYear()}-${pad(since.getMonth()+1)}-${pad(since.getDate())} ${pad(since.getHours())}:${pad(since.getMinutes())}`;
-    conditions.push(`created >= "${dateStr}"`);
-  }
-  const jql = conditions.join(' AND ') + ' ORDER BY created DESC';
-  console.log('JQL:', jql);
-
-  const url = `https://${domain}/rest/api/3/search/jql`;
+  const auth    = { username: email, password: token };
+  const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
 
   try {
+    const conditions = ['issuetype = Bug'];
+    if (reporter_names) {
+      conditions.push(`reporter IN (${jqlList(reporter_names.split(','))})`);
+    } else if (all_reporters !== 'true') {
+      conditions.push(`reporter IN (${REPORTERS.join(',')})`);
+    }
+    if (assignee_names) conditions.push(`assignee IN (${jqlList(assignee_names.split(','))})`);
+    if (statuses) {
+      const ids = await resolveStatusIds(domain, auth, headers, statuses.split(','));
+      if (ids.length) conditions.push(`status IN (${ids.join(',')})`);
+    }
+    if (versions)     conditions.push(`affectedVersion IN (${jqlList(versions.split(','))})`);
+    if (fixversions)  conditions.push(`fixVersion IN (${jqlList(fixversions.split(','))})`);
+    if (project) conditions.push(`project = "${project}"`);
+    if (date_from) {
+      conditions.push(`created >= "${date_from}"`);
+      if (date_to) conditions.push(`created <= "${date_to}"`);
+    } else if (period) {
+      const since = new Date(Date.now() - Number(period) * 24 * 60 * 60 * 1000);
+      const pad = n => String(n).padStart(2, '0');
+      const dateStr = `${since.getFullYear()}-${pad(since.getMonth()+1)}-${pad(since.getDate())} ${pad(since.getHours())}:${pad(since.getMinutes())}`;
+      conditions.push(`created >= "${dateStr}"`);
+    }
+    const jql = conditions.join(' AND ') + ' ORDER BY created DESC';
+    console.log('JQL:', jql);
+
+    const url = `https://${domain}/rest/api/3/search/jql`;
     const { next_page_token } = req.query;
     const body = { jql, maxResults: 100, fields: ['summary', 'priority', 'status', 'reporter', 'assignee', 'created', 'customfield_10136', 'versions', 'fixVersions'] };
     if (next_page_token) body.nextPageToken = next_page_token;
 
-    const response = await axios.post(url, body, {
-      auth: { username: email, password: token },
-      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-      httpsAgent: agent
-    });
+    const response = await axios.post(url, body, { auth, headers, httpsAgent: agent });
 
     const issues        = response.data.issues ?? [];
     const nextPageToken = response.data.nextPageToken ?? null;
