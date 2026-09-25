@@ -261,6 +261,7 @@
         <option value="30">30 jours</option>
         <option value="90">90 jours</option>
         <option value="year">Cette année</option>
+        <option value="">Tout</option>
         <option value="custom">Personnalisé</option>
       </select>
       <div id="custom-dates" style="display:none;align-items:center;gap:6px">
@@ -795,6 +796,37 @@
     buildOpts('fixversions', 'f-fixversion', 'Toutes versions corrigées');
   }
 
+  let loadingAbort = null;
+
+  function parseIssues(issues, domain) {
+    return issues.map(i => ({
+      key:         i.key,
+      summary:     i.fields.summary || '',
+      status:      i.fields.status?.name || '-',
+      reporter:    i.fields.reporter?.displayName || '-',
+      assignee:    i.fields.assignee?.displayName || '-',
+      product:     i.fields.customfield_10136?.value || '-',
+      versions:    (i.fields.versions    || []).map(v => v.name).join(', ') || '-',
+      fixversions: (i.fields.fixVersions || []).map(v => v.name).join(', ') || '-',
+      created:     i.fields.created || '',
+      url:         `https://${domain}/browse/${i.key}`
+    }));
+  }
+
+  function refreshAfterLoad() {
+    const countEl = document.getElementById('jira-raw-count');
+    countEl.textContent = `${all.length} chargés`;
+    const presentReporters = [...new Set(all.map(b => b.reporter).filter(r => r !== '-'))];
+    const reporters = (reporterScope === 'all' || reporterScope === 'icar' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
+    const sel = document.getElementById('f-reporter');
+    sel.innerHTML = '<option value="">Tous rapporteurs</option>'
+      + reporters.map(r => `<option value="${r}">${r}</option>`).join('');
+    buildVersionOptions();
+    document.getElementById('jira-stats').style.display = 'flex';
+    document.getElementById('jira-stats').style.flexDirection = 'row-reverse';
+    render();
+  }
+
   async function loadBugs() {
     const domain  = CFG.jira_domain  || '';
     const email   = CFG.jira_email   || '';
@@ -810,58 +842,56 @@
       err.style.display = 'block'; return;
     }
 
-    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Chargement…';
+    if (loadingAbort) { loadingAbort(); loadingAbort = null; }
+
+    let aborted = false;
+    loadingAbort = () => { aborted = true; };
+
+    all = [];
+    btn.disabled = true;
+
+    const baseParams = new URLSearchParams({ domain, email, token });
+    if (project) baseParams.set('project', project);
+    if (reporterScope === 'all' || reporterScope === 'icar') baseParams.set('all_reporters', 'true');
+    if (period === 'custom') {
+      const from = document.getElementById('date-from').value;
+      const to   = document.getElementById('date-to').value;
+      if (from) baseParams.set('date_from', from);
+      if (to)   baseParams.set('date_to', to);
+    } else if (period === 'year') {
+      baseParams.set('date_from', `${new Date().getFullYear()}-01-01`);
+    } else if (period) {
+      baseParams.set('period', period);
+    }
 
     try {
-      const params = new URLSearchParams({ domain, email, token });
-      if (project) params.set('project', project);
-      if (reporterScope === 'all' || reporterScope === 'icar') params.set('all_reporters', 'true');
-      if (period === 'custom') {
-        const from = document.getElementById('date-from').value;
-        const to   = document.getElementById('date-to').value;
-        if (from) params.set('date_from', from);
-        if (to)   params.set('date_to', to);
-      } else if (period === 'year') {
-        params.set('date_from', `${new Date().getFullYear()}-01-01`);
-      } else if (period) {
-        params.set('period', period);
-      }
+      let nextPageToken = null;
+      let pageNum = 0;
 
-      const res  = await fetch(`/api/bugs?${params}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+      do {
+        const params = new URLSearchParams(baseParams);
+        if (nextPageToken) params.set('next_page_token', nextPageToken);
 
-      all = (data.issues || []).map(i => ({
-        key:      i.key,
-        summary:  i.fields.summary || '',
-        status:   i.fields.status?.name || '-',
-        reporter: i.fields.reporter?.displayName || '-',
-        assignee: i.fields.assignee?.displayName || '-',
-        product:  i.fields.customfield_10136?.value || '-',
-        versions:    (i.fields.versions    || []).map(v => v.name).join(', ') || '-',
-        fixversions: (i.fields.fixVersions || []).map(v => v.name).join(', ') || '-',
-        created:  i.fields.created || '',
-        url:      `https://${domain}/browse/${i.key}`
-      }));
+        btn.innerHTML = `<span class="spinner"></span>${all.length > 0 ? all.length + ' — suite…' : 'Chargement…'}`;
 
-      document.getElementById('jira-raw-count').textContent = `${all.length} chargés`;
-      const uniqueReporters = [...new Set(all.map(b => b.reporter))].sort();
-      console.log('Rapporteurs Jira disponibles :', uniqueReporters);
+        const res  = await fetch(`/api/bugs?${params}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+        if (aborted) return;
 
-      const presentReporters = [...new Set(all.map(b => b.reporter).filter(r => r !== '-'))];
-      const reporters = (reporterScope === 'all' || reporterScope === 'icar' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
-      const sel = document.getElementById('f-reporter');
-      sel.innerHTML = '<option value="">Tous rapporteurs</option>'
-        + reporters.map(r => `<option value="${r}">${r}</option>`).join('');
-      buildVersionOptions();
+        all.push(...parseIssues(data.issues || [], domain));
+        nextPageToken = data.nextPageToken ?? null;
+        pageNum++;
 
-      document.getElementById('jira-stats').style.display = 'flex';
-      document.getElementById('jira-stats').style.flexDirection = 'row-reverse';
-      render();
+        refreshAfterLoad();
+      } while (nextPageToken);
+
+      const countEl = document.getElementById('jira-raw-count');
+      countEl.textContent = `${all.length} chargés`;
     } catch(e) {
-      err.textContent = '⚠ ' + e.message; err.style.display = 'block';
+      if (!aborted) { err.textContent = '⚠ ' + e.message; err.style.display = 'block'; }
     } finally {
-      btn.disabled = false; btn.innerHTML = 'Charger';
+      if (!aborted) { btn.disabled = false; btn.innerHTML = 'Charger'; loadingAbort = null; }
     }
   }
 

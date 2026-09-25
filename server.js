@@ -88,27 +88,20 @@ app.get('/api/bugs', async (req, res) => {
   const url = `https://${domain}/rest/api/3/search/jql`;
 
   try {
-    const allIssues = [];
-    let nextPageToken = undefined;
+    const { next_page_token } = req.query;
+    const body = { jql, maxResults: 100, fields: ['summary', 'priority', 'status', 'reporter', 'assignee', 'created', 'customfield_10136', 'versions', 'fixVersions'] };
+    if (next_page_token) body.nextPageToken = next_page_token;
 
-    do {
-      const body = { jql, maxResults: 100, fields: ['summary', 'priority', 'status', 'reporter', 'assignee', 'created', 'customfield_10136', 'versions', 'fixVersions'] };
-      if (nextPageToken) body.nextPageToken = nextPageToken;
+    const response = await axios.post(url, body, {
+      auth: { username: email, password: token },
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      httpsAgent: agent
+    });
 
-      const response = await axios.post(url, body, {
-        auth: { username: email, password: token },
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        httpsAgent: agent
-      });
-
-      const page    = response.data.issues ?? [];
-      nextPageToken = response.data.nextPageToken ?? null;
-      allIssues.push(...page);
-      if (!page.length) break;
-    } while (nextPageToken && allIssues.length < 10000);
-
-    console.log(`Jira – total chargé : ${allIssues.length}`);
-    res.json({ issues: allIssues, total: allIssues.length });
+    const issues        = response.data.issues ?? [];
+    const nextPageToken = response.data.nextPageToken ?? null;
+    console.log(`Jira – page chargée : ${issues.length} tickets${nextPageToken ? ', suite disponible' : ', fin'}`);
+    res.json({ issues, nextPageToken, total: response.data.total ?? issues.length });
   } catch (err) {
     const status = err.response?.status || 500;
     console.error('Jira error:', status, JSON.stringify(err.response?.data));
