@@ -243,6 +243,7 @@
   .pf-item input[type=checkbox] { accent-color: #58a6ff; width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
   .pf-item label { font-size: 12px; color: #cdd9e5; cursor: pointer; user-select: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pf-empty, .pf-loading { font-size: 11px; color: #6e7681; padding: 8px 12px; }
+  .pf-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #58a6ff; padding: 7px 12px 3px; }
   .pin-inputs { display: flex; gap: 8px; justify-content: center; margin: 20px 0; }
   .pin-inputs input { width: 44px; height: 50px; text-align: center; font-size: 20px; font-weight: 700; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; margin: 0; padding: 0; outline: none; }
   .pin-inputs input:focus { border-color: #58a6ff; }
@@ -460,6 +461,7 @@
       </div>
       <div class="pf-section">
         <div class="pf-section-title"><span>Rapporteurs</span><span class="pf-section-count" id="pf-count-reporter"></span></div>
+        <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('reporter', this.value)"></div>
         <div class="pf-list" id="pf-list-reporter"><div class="pf-loading">Chargement…</div></div>
       </div>
       <div class="pf-section">
@@ -894,16 +896,31 @@
     if (el) el.textContent = preFilters[key].length ? String(preFilters[key].length) : '';
   }
 
+  function pfItemHtml(key, it, id) {
+    const checked = preFilters[key].includes(it.value);
+    return `<div class="pf-item" data-label="${escHtml(it.label.toLowerCase())}">
+      <input type="checkbox" id="${id}" data-key="${key}" data-value="${escHtml(it.value)}" ${checked ? 'checked' : ''} onchange="pfToggle(this)">
+      <label for="${id}">${escHtml(it.label)}</label>
+    </div>`;
+  }
+
   function renderPfList(key, items, emptyMsg) {
     const box = document.getElementById(`pf-list-${key}`);
     if (!items.length) { box.innerHTML = `<div class="pf-empty">${emptyMsg || 'Aucun élément'}</div>`; return; }
-    box.innerHTML = items.map((it, idx) => {
-      const checked = preFilters[key].includes(it.value);
-      const id = `pf-${key}-${idx}`;
-      return `<div class="pf-item" data-label="${escHtml(it.label.toLowerCase())}">
-        <input type="checkbox" id="${id}" data-key="${key}" data-value="${escHtml(it.value)}" ${checked ? 'checked' : ''} onchange="pfToggle(this)">
-        <label for="${id}">${escHtml(it.label)}</label>
-      </div>`;
+    box.innerHTML = items.map((it, idx) => pfItemHtml(key, it, `pf-${key}-${idx}`)).join('');
+    updatePfCount(key);
+  }
+
+  const PF_VERSION_GROUP_ORDER = ['ICAR', 'ICOM', 'DMS Gateway', 'Autre'];
+
+  function renderPfGroupedList(key, items, emptyMsg) {
+    const box = document.getElementById(`pf-list-${key}`);
+    if (!items.length) { box.innerHTML = `<div class="pf-empty">${emptyMsg || 'Aucun élément'}</div>`; return; }
+    const groups = {};
+    items.forEach(it => { const g = groupOf(it.value) === 'Sans version' ? 'Autre' : groupOf(it.value); (groups[g] ||= []).push(it); });
+    box.innerHTML = PF_VERSION_GROUP_ORDER.filter(g => groups[g]?.length).map(g => {
+      const rows = groups[g].map((it, idx) => pfItemHtml(key, it, `pf-${key}-${g}-${idx}`.replace(/\s+/g, ''))).join('');
+      return `<div class="pf-group-label">${escHtml(g)}</div>${rows}`;
     }).join('');
     updatePfCount(key);
   }
@@ -943,8 +960,8 @@
     renderPfList('status',      PF_STATUSES.map(s => ({ value: s, label: s })));
     renderPfList('reporter',    knownValues.reporters.map(r => ({ value: r, label: r })), notLoadedMsg);
     renderPfList('assignee',    knownValues.assignees.map(a => ({ value: a, label: a })), notLoadedMsg);
-    renderPfList('version',     knownValues.versions.map(v => ({ value: v, label: v })), notLoadedMsg);
-    renderPfList('fixversion',  knownValues.fixversions.map(v => ({ value: v, label: v })), notLoadedMsg);
+    renderPfGroupedList('version',     knownValues.versions.map(v => ({ value: v, label: v })), notLoadedMsg);
+    renderPfGroupedList('fixversion',  knownValues.fixversions.map(v => ({ value: v, label: v })), notLoadedMsg);
   }
 
   function closePreFilters() {
