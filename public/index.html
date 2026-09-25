@@ -632,6 +632,7 @@
     updateHeaderStatus();
     initResizable();
     document.getElementById('team-scope').value = reporterScope;
+    renderPfAllLists();
     if (CFG.jira_domain && CFG.jira_token) {
       document.getElementById('period').value = '7';
       loadBugs();
@@ -887,13 +888,21 @@
   let knownValues = loadKnownValues();
 
   function mergeKnownValues() {
-    const addPlain = (arr, val) => { if (val && val !== '-' && !arr.includes(val)) arr.push(val); };
-    const addNamed = (arr, id, name) => { if (id && name && name !== '-' && !arr.some(x => x.id === id)) arr.push({ id, name }); };
+    // Sets pour une dédup en O(1) au lieu d'un .includes()/.some() en O(n) par ticket,
+    // sensible dès que les listes accumulées deviennent grosses (des centaines d'entrées).
+    const reporterIds   = new Set(knownValues.reporters.map(r => r.id));
+    const assigneeIds   = new Set(knownValues.assignees.map(a => a.id));
+    const versionSet    = new Set(knownValues.versions);
+    const fixversionSet = new Set(knownValues.fixversions);
+
+    const addNamed = (idSet, arr, id, name) => { if (id && name && name !== '-' && !idSet.has(id)) { idSet.add(id); arr.push({ id, name }); } };
+    const addPlain = (set, arr, val) => { if (val && !set.has(val)) { set.add(val); arr.push(val); } };
+
     all.forEach(b => {
-      addNamed(knownValues.reporters, b.reporterId, b.reporter);
-      addNamed(knownValues.assignees, b.assigneeId, b.assignee);
-      (b.versions    !== '-' ? b.versions.split(', ')    : []).forEach(v => addPlain(knownValues.versions,    v.trim()));
-      (b.fixversions !== '-' ? b.fixversions.split(', ') : []).forEach(v => addPlain(knownValues.fixversions, v.trim()));
+      addNamed(reporterIds, knownValues.reporters, b.reporterId, b.reporter);
+      addNamed(assigneeIds, knownValues.assignees, b.assigneeId, b.assignee);
+      (b.versions    !== '-' ? b.versions.split(', ')    : []).forEach(v => addPlain(versionSet,    knownValues.versions,    v.trim()));
+      (b.fixversions !== '-' ? b.fixversions.split(', ') : []).forEach(v => addPlain(fixversionSet, knownValues.fixversions, v.trim()));
     });
     knownValues.reporters.sort((a, b) => a.name.localeCompare(b.name));
     knownValues.assignees.sort((a, b) => a.name.localeCompare(b.name));
@@ -993,6 +1002,18 @@
     updatePfButton();
   }
 
+  // Reconstruit le contenu des 5 sections à partir de knownValues. Coûteux si les listes
+  // sont grosses (des centaines de rapporteurs/versions accumulés) : n'appeler que quand
+  // les données changent (fin de chargement, purge), jamais juste pour ouvrir la modale.
+  function renderPfAllLists() {
+    const notLoadedMsg = 'Aucun élément — chargez des tickets au moins une fois pour peupler cette liste.';
+    renderPfPills('status',     PF_STATUSES.map(s => ({ value: s, label: s })));
+    renderPfList('reporter',    knownValues.reporters.map(r => ({ value: r.id, label: r.name })), notLoadedMsg);
+    renderPfList('assignee',    knownValues.assignees.map(a => ({ value: a.id, label: a.name })), notLoadedMsg);
+    renderPfGroupedList('version',     knownValues.versions.map(v => ({ value: v, label: v })), notLoadedMsg);
+    renderPfGroupedList('fixversion',  knownValues.fixversions.map(v => ({ value: v, label: v })), notLoadedMsg);
+  }
+
   function pfPurgeKnownValues() {
     if (!confirm('Purger les listes de rapporteurs, assignés et versions mémorisées ? Elles se reconstruiront au prochain chargement de tickets.')) return;
     knownValues = { reporters: [], assignees: [], versions: [], fixversions: [] };
@@ -1001,12 +1022,7 @@
     preFilters.assignee = [];
     preFilters.version = [];
     preFilters.fixversion = [];
-    const notLoadedMsg = 'Aucun élément — chargez des tickets au moins une fois pour peupler cette liste.';
-    renderPfList('reporter',   [], notLoadedMsg);
-    renderPfList('assignee',   [], notLoadedMsg);
-    renderPfGroupedList('version',    [], notLoadedMsg);
-    renderPfGroupedList('fixversion', [], notLoadedMsg);
-    ['reporter','assignee','version','fixversion'].forEach(updatePfCount);
+    renderPfAllLists();
     updatePfButton();
   }
 
@@ -1017,12 +1033,6 @@
       return;
     }
     document.getElementById('overlay-prefilters').classList.remove('hidden');
-    const notLoadedMsg = 'Aucun élément — chargez des tickets au moins une fois pour peupler cette liste.';
-    renderPfPills('status',     PF_STATUSES.map(s => ({ value: s, label: s })));
-    renderPfList('reporter',    knownValues.reporters.map(r => ({ value: r.id, label: r.name })), notLoadedMsg);
-    renderPfList('assignee',    knownValues.assignees.map(a => ({ value: a.id, label: a.name })), notLoadedMsg);
-    renderPfGroupedList('version',     knownValues.versions.map(v => ({ value: v, label: v })), notLoadedMsg);
-    renderPfGroupedList('fixversion',  knownValues.fixversions.map(v => ({ value: v, label: v })), notLoadedMsg);
   }
 
   function closePreFilters() {
@@ -1056,6 +1066,7 @@
 
   function finalizeLoad() {
     mergeKnownValues();
+    renderPfAllLists();
     const presentReporters = [...new Set(all.map(b => b.reporter).filter(r => r !== '-'))];
     const reporters = (lastLoadWasAdvanced || reporterScope === 'all' || reporterScope === 'icar' ? presentReporters : presentReporters.filter(r => ALLOWED_REPORTERS.includes(r.toLowerCase()))).sort();
     const sel = document.getElementById('f-reporter');
