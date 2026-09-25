@@ -271,7 +271,6 @@
     <div class="filter-bar">
       <span class="filter-label">Période</span>
       <select id="period" onchange="toggleCustomDates()">
-        <option value="">Toute</option>
         <option value="7" selected>7 jours</option>
         <option value="14">14 jours</option>
         <option value="30">30 jours</option>
@@ -285,12 +284,18 @@
         <span style="font-size:12px;color:#6e7681">→</span>
         <input type="date" id="date-to" style="background:#161b22;border:1px solid #21262d;border-radius:5px;color:#cdd9e5;font-size:12px;padding:4px 8px;height:28px;outline:none;">
       </div>
+      <span class="filter-label">Équipe</span>
+      <select id="team-scope" onchange="setReporterScope(this.value)">
+        <option value="team">Support SPC</option>
+        <option value="icar">I'CAR DMS</option>
+        <option value="all">Tous les rapporteurs</option>
+      </select>
       <div class="filter-sep"></div>
       <input type="text" id="search" placeholder="Rechercher…" oninput="render()">
       <button class="load-btn" id="jira-btn" onclick="loadBugs()">Charger</button>
       <button class="load-btn" onclick="openPreFilters()"><span id="pf-btn-label">🔍 Recherche avancée</span></button>
       <div style="position:relative">
-        <button class="load-btn" onclick="toggleColPanel()" id="col-btn" style="background:#1e1232;border:1px solid #5c3a9a;white-space:nowrap">⚗ Filtre</button>
+        <button class="load-btn" onclick="toggleColPanel()" id="col-btn" style="background:#1e1232;border:1px solid #5c3a9a;white-space:nowrap">Modifier l'affichage</button>
         <div id="col-panel" class="col-panel hidden">
         </div>
       </div>
@@ -600,6 +605,7 @@
     await loadServerConfig();
     updateHeaderStatus();
     initResizable();
+    document.getElementById('team-scope').value = reporterScope;
     if (CFG.jira_domain && CFG.jira_token) {
       document.getElementById('period').value = '7';
       loadBugs();
@@ -726,20 +732,7 @@
       </div>`;
     }).join('');
     panel.innerHTML = `
-      <div class="col-panel-title">Équipe</div>
-      <div class="col-item">
-        <input type="radio" name="scope" id="scope-team" ${reporterScope === 'team' ? 'checked' : ''} onchange="setReporterScope('team')">
-        <label for="scope-team">Support SPC</label>
-      </div>
-      <div class="col-item">
-        <input type="radio" name="scope" id="scope-icar" ${reporterScope === 'icar' ? 'checked' : ''} onchange="setReporterScope('icar')">
-        <label for="scope-icar">I'CAR DMS</label>
-      </div>
-      <div class="col-item">
-        <input type="radio" name="scope" id="scope-all" ${reporterScope === 'all' ? 'checked' : ''} onchange="setReporterScope('all')">
-        <label for="scope-all">Tous les rapporteurs</label>
-      </div>
-      <div class="col-panel-title" style="margin-top:8px">Colonnes visibles</div>
+      <div class="col-panel-title">Colonnes visibles</div>
       ${items}`;
   }
 
