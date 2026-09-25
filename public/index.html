@@ -1082,7 +1082,8 @@
     if (loadingAbort) { loadingAbort(); loadingAbort = null; }
 
     let aborted = false;
-    loadingAbort = () => { aborted = true; };
+    const controller = new AbortController();
+    loadingAbort = () => { aborted = true; controller.abort(); };
 
     btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Chargement…';
 
@@ -1111,17 +1112,47 @@
     if (preFilters.fixversion.length) params.set('fixversions', preFilters.fixversion.join(','));
 
     try {
-      const res  = await fetch(`/api/bugs?${params}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
-      if (aborted) return;
+      const res = await fetch(`/api/bugs?${params}`, { signal: controller.signal });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Erreur ${res.status}`);
+      }
 
-      all = parseIssues(data.issues || [], domain);
+      let issues = null;
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let idx;
+        while ((idx = buffer.indexOf('\n')) !== -1) {
+          const line = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 1);
+          if (!line.trim()) continue;
+          const msg = JSON.parse(line);
+          if (msg.type === 'progress') {
+            btn.innerHTML = `<span class="spinner"></span>${msg.count} chargés…`;
+            document.getElementById('jira-raw-count').textContent = `${msg.count} chargés`;
+            document.getElementById('jira-stats').style.display = 'flex';
+            document.getElementById('jira-stats').style.flexDirection = 'row-reverse';
+          } else if (msg.type === 'done') {
+            issues = msg.issues;
+          } else if (msg.type === 'error') {
+            throw new Error(msg.error);
+          }
+        }
+      }
+
+      if (aborted) return;
+      if (!issues) throw new Error('Réponse incomplète du serveur.');
+
+      all = parseIssues(issues, domain);
       finalizeLoad();
 
       document.getElementById('jira-raw-count').textContent = `${all.length} chargés`;
-      document.getElementById('jira-stats').style.display = 'flex';
-      document.getElementById('jira-stats').style.flexDirection = 'row-reverse';
       render();
     } catch(e) {
       if (!aborted) { err.textContent = '⚠ ' + e.message; err.style.display = 'block'; }

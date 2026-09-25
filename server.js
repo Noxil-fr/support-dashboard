@@ -131,6 +131,10 @@ app.get('/api/bugs', async (req, res) => {
     const url = `https://${domain}/rest/api/3/search/jql`;
     const fields = ['summary', 'priority', 'status', 'reporter', 'assignee', 'created', 'customfield_10136', 'versions', 'fixVersions'];
 
+    // Réponse en NDJSON (une ligne JSON par événement) : le serveur boucle sur Jira sans
+    // repasser par le navigateur entre chaque page, tout en le tenant informé de la progression.
+    res.setHeader('Content-Type', 'application/x-ndjson');
+
     const allIssues = [];
     let nextPageToken;
     do {
@@ -141,15 +145,21 @@ app.get('/api/bugs', async (req, res) => {
       const page = response.data.issues ?? [];
       nextPageToken = response.data.nextPageToken ?? null;
       allIssues.push(...page);
+      res.write(JSON.stringify({ type: 'progress', count: allIssues.length }) + '\n');
       if (!page.length) break;
     } while (nextPageToken && allIssues.length < 10000);
 
     console.log(`Jira – total chargé : ${allIssues.length}`);
-    res.json({ issues: allIssues, total: allIssues.length });
+    res.write(JSON.stringify({ type: 'done', issues: allIssues, total: allIssues.length }) + '\n');
+    res.end();
   } catch (err) {
     const status = err.response?.status || 500;
     console.error('Jira error:', status, JSON.stringify(err.response?.data));
     const message = err.response?.data?.errorMessages?.[0] || err.response?.data?.message || err.message;
+    if (res.headersSent) {
+      res.write(JSON.stringify({ type: 'error', error: message }) + '\n');
+      return res.end();
+    }
     res.status(status).json({ error: message, detail: err.response?.data });
   }
 });
