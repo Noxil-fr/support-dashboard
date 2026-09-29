@@ -133,7 +133,12 @@ app.get('/api/bugs', async (req, res) => {
 
     // Réponse en NDJSON (une ligne JSON par événement) : le serveur boucle sur Jira sans
     // repasser par le navigateur entre chaque page, tout en le tenant informé de la progression.
+    // X-Accel-Buffering désactive la bufferisation du reverse proxy (nginx-like, ex. Render) qui
+    // sinon retient toute la réponse jusqu'à la fin et annule l'effet "compteur en direct".
     res.setHeader('Content-Type', 'application/x-ndjson');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (res.flushHeaders) res.flushHeaders();
 
     const allIssues = [];
     let nextPageToken;
