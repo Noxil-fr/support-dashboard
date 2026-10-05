@@ -179,7 +179,7 @@
     cursor: pointer; user-select: none;
   }
   thead th:hover { color: #e6edf3; }
-  td { padding: 9px 20px; border-bottom: 1px solid #21262d; border-right: 1px solid #21262d; vertical-align: middle; }
+  td { padding: 9px 20px; border-bottom: 1px solid #21262d; border-right: 1px solid #21262d; vertical-align: middle; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 0; }
   td:last-child { border-right: none; }
   thead th { border-right: 1px solid #21262d; }
   thead th:last-child { border-right: none; }
@@ -817,7 +817,15 @@
     }).join('');
     panel.innerHTML = `
       <div class="col-panel-title">Colonnes visibles</div>
-      ${items}`;
+      ${items}
+      <div class="col-item" onclick="resetColWidths()" style="color:#f85149;cursor:pointer;margin-top:4px;border-top:1px solid #21262d;padding-top:9px">
+        <span>↺ Réinitialiser les largeurs</span>
+      </div>`;
+  }
+
+  function resetColWidths() {
+    localStorage.removeItem('col_widths');
+    applyColumns();
   }
 
   function setReporterScope(scope) {
