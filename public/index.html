@@ -172,7 +172,7 @@
   td:last-child { border-right: none; }
   thead th { border-right: 1px solid #21262d; }
   thead th:last-child { border-right: none; }
-  .col-resizer { position: absolute; right: 0; top: 0; width: 6px; height: 100%; cursor: col-resize; z-index: 3; user-select: none; }
+  .col-resizer { position: absolute; right: -4px; top: 0; width: 9px; height: 100%; cursor: col-resize; z-index: 3; user-select: none; }
   .col-resizer:hover, .col-resizer.active { background: rgba(88,166,255,.45); }
   tr:hover td { background: #1c2128; }
   .key { color: #58a6ff; font-weight: 700; font-size: 12px; text-decoration: none; white-space: nowrap; }
@@ -661,30 +661,27 @@
     localStorage.setItem('col_prefs', JSON.stringify(prefs));
   }
 
-  function applyColumns() {
-    const prefs = loadColPrefs();
+  function loadColWidths() {
+    try { return JSON.parse(localStorage.getItem('col_widths') || '{}'); } catch { return {}; }
+  }
 
-    // 1. Apply visibility + restore original widths on all <th>
+  function saveColWidths(widths) {
+    localStorage.setItem('col_widths', JSON.stringify(widths));
+  }
+
+  function applyColumns() {
+    const prefs  = loadColPrefs();
+    const widths = loadColWidths();
+
     COL_DEFS.forEach(c => {
       const hidden = prefs[c.id] === false;
       document.querySelectorAll(`.col-${c.id}`).forEach(el => {
         el.style.display = hidden ? 'none' : '';
         if (el.tagName === 'TH') {
-          el.style.width = c.width || '';
+          el.style.width = widths[c.id] || c.width || '';
         }
       });
     });
-
-    // 2. If summary is hidden, make the last visible <th> absorb remaining space
-    const summaryHidden = prefs['summary'] === false;
-    if (summaryHidden) {
-      const headers = document.querySelectorAll('#jira-table th');
-      let lastVisibleTh = null;
-      headers.forEach(th => {
-        if (th.style.display !== 'none') lastVisibleTh = th;
-      });
-      if (lastVisibleTh) lastVisibleTh.style.width = '';
-    }
   }
 
   const STAT_PALETTE = {
@@ -1174,7 +1171,7 @@
   }
 
   function initResizable() {
-    let dragging = false, justDragged = false, startX = 0, startW = 0, activeTh = null, activeHandle = null;
+    let dragging = false, justDragged = false, startX = 0, startW = 0, activeTh = null, activeHandle = null, activeColId = null;
 
     document.querySelectorAll('#jira-table thead th').forEach(th => {
       const handle = document.createElement('span');
@@ -1186,6 +1183,7 @@
         startW       = th.getBoundingClientRect().width;
         activeTh     = th;
         activeHandle = handle;
+        activeColId  = [...th.classList].find(c => c.startsWith('col-'))?.replace('col-', '');
         handle.classList.add('active');
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
@@ -1199,19 +1197,22 @@
       if (!dragging) return;
       const newW = Math.max(40, startW + (e.clientX - startX));
       activeTh.style.width = newW + 'px';
-      const colId = [...activeTh.classList].find(c => c.startsWith('col-'))?.replace('col-', '');
-      const def = colId && COL_DEFS.find(c => c.id === colId);
-      if (def && def.width !== null) def.width = newW + 'px';
       justDragged = true;
     });
 
     document.addEventListener('mouseup', () => {
       if (!dragging) return;
       dragging = false;
+      if (activeColId) {
+        const widths = loadColWidths();
+        widths[activeColId] = activeTh.style.width;
+        saveColWidths(widths);
+      }
       activeHandle?.classList.remove('active');
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       activeTh = activeHandle = null;
+      activeColId = null;
     });
 
     // Bloque le click qui suit immédiatement un drag (phase capture, avant l'onclick du th)
