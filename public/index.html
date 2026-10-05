@@ -14,9 +14,20 @@
 
   /* ── Header ──────────────────────────────────────────────── */
   .header { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 52px; background: #161b22; border-bottom: 1px solid #21262d; flex-shrink: 0; }
+  .logo-group { display: flex; align-items: center; gap: 10px; }
   .logo { font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #e6edf3; }
   .logo span { color: #58a6ff; }
+  .version-badge { font-size: 11px; font-weight: 700; color: #58a6ff; background: #0c1e3a; border: 1px solid #1a3a6b; border-radius: 10px; padding: 2px 8px; letter-spacing: .3px; }
+  .readme-btn { background: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: #8b949e; cursor: pointer; transition: all .15s; }
+  .readme-btn:hover { border-color: #58a6ff; color: #58a6ff; }
   .header-right { display: flex; align-items: center; gap: 12px; }
+  .changelog { max-height: 50vh; overflow-y: auto; margin: 4px 0; }
+  .changelog-entry { margin-bottom: 18px; }
+  .changelog-entry:last-child { margin-bottom: 0; }
+  .changelog-version { font-size: 13px; font-weight: 700; color: #58a6ff; margin-bottom: 6px; }
+  .changelog-list { margin: 0; padding-left: 18px; font-size: 13px; color: #cdd9e5; line-height: 1.7; }
+  .changelog-list a { color: #58a6ff; }
+  .changelog-empty { list-style: none; margin-left: -18px; color: #6e7681; font-style: italic; font-size: 13px; }
   .cfg-status { font-size: 12px; color: #3fb950; }
   .cfg-status.warn { color: #f85149; }
   .config-btn { background: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 5px 12px; font-size: 12px; color: #8b949e; cursor: pointer; transition: all .15s; }
@@ -276,7 +287,11 @@
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
 <div class="header">
-  <div class="logo">Support <span>Dashboard</span></div>
+  <div class="logo-group">
+    <div class="logo">Support <span>Dashboard</span></div>
+    <span class="version-badge">v1.0</span>
+    <button class="readme-btn" onclick="openReadme()">📋 Read me</button>
+  </div>
   <div class="header-right">
     <span id="hdr-status" class="cfg-status warn">⚠ Non configuré</span>
     <button class="config-btn" onclick="openConfig()">⚙ Configuration</button>
@@ -417,6 +432,29 @@
 
 </div>
 
+<!-- ══════════════════════ MODAL READ ME ═══════════════════════════════════ -->
+<div class="overlay hidden" id="overlay-readme">
+  <div class="modal">
+    <h2>📋 Read me</h2>
+    <div class="changelog">
+      <div class="changelog-entry">
+        <div class="changelog-version">v1.1</div>
+        <div class="changelog-empty">Rien pour le moment.</div>
+      </div>
+      <div class="changelog-entry">
+        <div class="changelog-version">v1.0</div>
+        <ul class="changelog-list">
+          <li>Bienvenue dans Support Dashboard !</li>
+          <li>Pour signaler un bug : <a href="mailto:antoine.lancelot@nextlane.com">antoine.lancelot@nextlane.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary" onclick="closeReadme()">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════ MODAL PIN ══════════════════════════════════════── -->
 <div class="overlay hidden" id="overlay-pin">
   <div class="modal">
@@ -542,6 +580,9 @@
   }
 
   function closePin() { document.getElementById('overlay-pin').classList.add('hidden'); }
+
+  function openReadme()  { document.getElementById('overlay-readme').classList.remove('hidden'); }
+  function closeReadme() { document.getElementById('overlay-readme').classList.add('hidden'); }
 
   function clearPinInputs() {
     document.querySelectorAll('#pin-inputs input').forEach(i => i.value = '');
