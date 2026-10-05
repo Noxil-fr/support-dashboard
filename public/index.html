@@ -413,15 +413,15 @@
         <div class="empty-state" id="jira-empty" style="display:none">Aucun bug trouvé.</div>
         <table id="jira-table">
           <thead><tr>
-            <th class="col-created" onclick="sort('created')" style="width:100px">Créé le</th>
-            <th class="col-key" onclick="sort('key')" style="width:108px">N°</th>
+            <th class="col-created" onclick="sort('created')" style="width:115px">Créé le</th>
+            <th class="col-key" onclick="sort('key')" style="width:120px">N°</th>
             <th class="col-summary" onclick="sort('summary')">Résumé</th>
-            <th class="col-status" onclick="sort('status')" style="width:155px;text-align:center">Statut</th>
-            <th class="col-reporter" onclick="sort('reporter')" style="width:150px">Rapporteur</th>
-            <th class="col-assignee" onclick="sort('assignee')" style="width:150px">Assigné</th>
-            <th class="col-product" onclick="sort('product')" style="width:121px">Produit</th>
-            <th class="col-versions"  onclick="sort('versions')"  style="width:167px">Version affectée</th>
-            <th class="col-fixversions" onclick="sort('fixversions')" style="width:155px">Version corrigée</th>
+            <th class="col-status" onclick="sort('status')" style="width:130px;text-align:center">Statut</th>
+            <th class="col-reporter" onclick="sort('reporter')" style="width:165px">Rapporteur</th>
+            <th class="col-assignee" onclick="sort('assignee')" style="width:165px">Assigné</th>
+            <th class="col-product" onclick="sort('product')" style="width:105px">Produit</th>
+            <th class="col-versions"  onclick="sort('versions')"  style="width:150px">Version affectée</th>
+            <th class="col-fixversions" onclick="sort('fixversions')" style="width:140px">Version corrigée</th>
           </tr></thead>
           <tbody id="tbody"></tbody>
         </table>
@@ -685,15 +685,15 @@
 
   // ── Colonnes ────────────────────────────────────────────────────────────────
   const COL_DEFS = [
-    { id: 'created',  label: 'Créé le',          width: '100px' },
-    { id: 'key',      label: 'N°',               width: '108px' },
-    { id: 'summary',  label: 'Résumé',           width: '320px' },
-    { id: 'status',   label: 'Statut',           width: '155px' },
-    { id: 'reporter', label: 'Rapporteur',       width: '150px' },
-    { id: 'assignee', label: 'Assigné',          width: '150px' },
-    { id: 'product',  label: 'Produit',          width: '121px' },
-    { id: 'versions',    label: 'Version affectée', width: '167px' },
-    { id: 'fixversions', label: 'Version corrigée', width: '155px' },
+    { id: 'created',  label: 'Créé le',          width: '115px' },
+    { id: 'key',      label: 'N°',               width: '120px' },
+    { id: 'summary',  label: 'Résumé',           width: '360px' },
+    { id: 'status',   label: 'Statut',           width: '130px' },
+    { id: 'reporter', label: 'Rapporteur',       width: '165px' },
+    { id: 'assignee', label: 'Assigné',          width: '165px' },
+    { id: 'product',  label: 'Produit',          width: '105px' },
+    { id: 'versions',    label: 'Version affectée', width: '150px' },
+    { id: 'fixversions', label: 'Version corrigée', width: '140px' },
   ];
 
   function loadColPrefs() {
