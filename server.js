@@ -89,7 +89,7 @@ async function resolveStatusIds(domain, auth, headers, names) {
 app.get('/api/bugs', async (req, res) => {
   const {
     domain, email, token, project, period, date_from, date_to, all_reporters,
-    statuses, assignee_ids, reporter_ids, versions, fixversions
+    statuses, assignee_ids, reporter_ids, versions, fixversions, clients
   } = req.query;
 
   if (!domain || !email || !token) {
@@ -115,6 +115,7 @@ app.get('/api/bugs', async (req, res) => {
     }
     if (versions)     conditions.push(`affectedVersion IN (${jqlList(versions.split(','))})`);
     if (fixversions)  conditions.push(`fixVersion IN (${jqlList(fixversions.split(','))})`);
+    if (clients)      conditions.push(`cf[10263] IN (${jqlList(clients.split(','))})`);
     if (project) conditions.push(`project = "${project}"`);
     if (date_from) {
       conditions.push(`created >= "${date_from}"`);
@@ -129,7 +130,7 @@ app.get('/api/bugs', async (req, res) => {
     console.log('JQL:', jql);
 
     const url = `https://${domain}/rest/api/3/search/jql`;
-    const fields = ['summary', 'priority', 'status', 'reporter', 'assignee', 'created', 'customfield_10136', 'versions', 'fixVersions'];
+    const fields = ['summary', 'priority', 'status', 'reporter', 'assignee', 'created', 'customfield_10136', 'versions', 'fixVersions', 'customfield_10263'];
 
     // Réponse en NDJSON (une ligne JSON par événement) : le serveur boucle sur Jira sans
     // repasser par le navigateur entre chaque page, tout en le tenant informé de la progression.
