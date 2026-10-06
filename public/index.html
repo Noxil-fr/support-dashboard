@@ -789,22 +789,39 @@
     render();
   }
 
-  function setStatusFilter(el, statuses) {
-    const same = filterStatus && statuses && JSON.stringify(filterStatus) === JSON.stringify(statuses);
-    filterStatus = (same || !statuses) ? null : statuses;
-    document.querySelectorAll('#side-pane-techs .stat').forEach(s => s.classList.remove('stat-active'));
+  let activeStatusTiles = new Map(); // tile <el> -> ses statuts Jira, pour la sélection multiple
+
+  function updateStatusBadge() {
     const badge = document.getElementById('badge-status');
-    if (filterStatus && el) {
-      el.classList.add('stat-active');
-      const statClass = [...el.classList].find(c => c.startsWith('s-') && c !== 'stat-active');
-      const pal = STAT_PALETTE[statClass] || { color: '#8b949e', bg: '#161b22', border: '#30363d' };
-      const label = el.querySelector('.stat-lbl').textContent;
-      document.getElementById('badge-status-name').textContent = label;
-      badge.style.cssText = `background:${pal.bg};border-color:${pal.border};color:${pal.color}`;
-      badge.classList.add('visible');
-    } else {
-      badge.classList.remove('visible');
+    if (!activeStatusTiles.size) { badge.classList.remove('visible'); return; }
+    const tiles  = [...activeStatusTiles.keys()];
+    const labels = tiles.map(e => e.querySelector('.stat-lbl').textContent);
+    document.getElementById('badge-status-name').textContent = labels.length > 2 ? `${labels.length} statuts` : labels.join(' + ');
+    const statClass = [...tiles[0].classList].find(c => c.startsWith('s-') && c !== 'stat-active');
+    const pal = STAT_PALETTE[statClass] || { color: '#8b949e', bg: '#161b22', border: '#30363d' };
+    badge.style.cssText = `background:${pal.bg};border-color:${pal.border};color:${pal.color}`;
+    badge.classList.add('visible');
+  }
+
+  // Sélection multiple : cliquer une tuile l'ajoute/la retire de la sélection ; "Total" efface tout.
+  function setStatusFilter(el, statuses) {
+    if (!statuses) {
+      activeStatusTiles.clear();
+      document.querySelectorAll('#side-pane-techs .stat').forEach(s => s.classList.remove('stat-active'));
+      filterStatus = null;
+      updateStatusBadge();
+      render();
+      return;
     }
+    if (activeStatusTiles.has(el)) {
+      activeStatusTiles.delete(el);
+      el.classList.remove('stat-active');
+    } else {
+      activeStatusTiles.set(el, statuses);
+      el.classList.add('stat-active');
+    }
+    filterStatus = activeStatusTiles.size ? [...activeStatusTiles.values()].flat() : null;
+    updateStatusBadge();
     render();
   }
 
