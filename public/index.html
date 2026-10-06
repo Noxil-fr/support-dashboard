@@ -21,11 +21,17 @@
   .readme-btn { background: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: #8b949e; cursor: pointer; transition: all .15s; }
   .readme-btn:hover { border-color: #58a6ff; color: #58a6ff; }
   .header-right { display: flex; align-items: center; gap: 12px; }
-  .changelog { max-height: 50vh; overflow-y: auto; margin: 4px 0; }
-  .changelog-entry { margin-bottom: 18px; }
-  .changelog-entry:last-child { margin-bottom: 0; }
-  .changelog-version { font-size: 13px; font-weight: 700; color: #58a6ff; margin-bottom: 6px; }
-  .changelog-list { margin: 0; padding-left: 18px; font-size: 13px; color: #cdd9e5; line-height: 1.7; }
+  .readme-modal { max-width: 460px; }
+  .changelog { max-height: 56vh; overflow-y: auto; margin: 4px 0; padding-left: 4px; }
+  .changelog-entry { position: relative; padding: 0 0 22px 24px; border-left: 2px solid #21262d; }
+  .changelog-entry:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .changelog-entry::before { content: ''; position: absolute; left: -6px; top: 2px; width: 11px; height: 11px; border-radius: 50%; background: #0d1117; border: 2px solid #30363d; }
+  .changelog-entry.changelog-latest::before { border-color: #58a6ff; background: #58a6ff; box-shadow: 0 0 0 3px #0c1e3a; }
+  .changelog-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .changelog-version { font-size: 13px; font-weight: 700; color: #cdd9e5; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 2px 10px; }
+  .changelog-entry.changelog-latest .changelog-version { color: #79c0ff; background: #0c1e3a; border-color: #1a3a6b; }
+  .changelog-latest-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #3fb950; }
+  .changelog-list { margin: 0; padding-left: 18px; font-size: 13px; color: #adbac7; line-height: 1.75; }
   .changelog-list a { color: #58a6ff; }
   .changelog-empty { list-style: none; margin-left: -18px; color: #6e7681; font-style: italic; font-size: 13px; }
   .cfg-status { font-size: 12px; color: #3fb950; }
@@ -471,27 +477,31 @@
 
 <!-- ══════════════════════ MODAL READ ME ═══════════════════════════════════ -->
 <div class="overlay hidden" id="overlay-readme">
-  <div class="modal">
+  <div class="modal readme-modal">
     <h2>📋 Read me</h2>
+    <p>Ce qui a changé récemment sur le dashboard.</p>
     <div class="changelog">
-      <div class="changelog-entry">
-        <div class="changelog-version">v1.2</div>
+      <div class="changelog-entry changelog-latest">
+        <div class="changelog-header">
+          <span class="changelog-version">v1.2</span>
+          <span class="changelog-latest-tag">Nouveau</span>
+        </div>
         <ul class="changelog-list">
-          <li>Panneau latéral Clients cliquable (filtre le tableau comme ACTO/Versions)</li>
-          <li>Bouton de chargement renommé "Charger"</li>
-          <li>Raccourcis déplacés dans l'en-tête</li>
-          <li>Sélection multiple des statuts dans le panneau ACTO</li>
+          <li>Le panneau Clients se clique maintenant comme ACTO et Versions, pour filtrer directement le tableau</li>
+          <li>Le bouton de chargement s'appelle simplement "Charger"</li>
+          <li>Les raccourcis sont passés dans l'en-tête, pour laisser respirer la barre de recherche</li>
+          <li>Tu peux sélectionner plusieurs statuts à la fois dans le panneau ACTO</li>
         </ul>
       </div>
       <div class="changelog-entry">
-        <div class="changelog-version">v1.1</div>
+        <div class="changelog-header"><span class="changelog-version">v1.1</span></div>
         <ul class="changelog-list">
           <li>Ajout de la colonne Client dans le tableau</li>
           <li>Ajout du filtre Client dans la recherche avancée</li>
         </ul>
       </div>
       <div class="changelog-entry">
-        <div class="changelog-version">v1.0</div>
+        <div class="changelog-header"><span class="changelog-version">v1.0</span></div>
         <ul class="changelog-list">
           <li>Bienvenue dans Support Dashboard !</li>
           <li>Pour signaler un bug : <a href="mailto:antoine.lancelot@nextlane.com">antoine.lancelot@nextlane.com</a></li>
