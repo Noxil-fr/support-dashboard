@@ -345,7 +345,7 @@
       </select>
       <div class="filter-sep"></div>
       <input type="text" id="search" placeholder="Rechercher…" oninput="render()">
-      <button class="load-btn" id="jira-btn" onclick="pfReset(); loadBugs();">Recherche</button>
+      <button class="load-btn" id="jira-btn" onclick="pfReset(); loadBugs();">Charger</button>
       <div class="filter-sep"></div>
       <button class="load-btn" onclick="openPreFilters()"><span id="pf-btn-label">🔍 Recherche avancée</span></button>
       <div class="filter-sep"></div>
@@ -1331,7 +1331,7 @@
     } catch(e) {
       if (!aborted) { err.textContent = '⚠ ' + e.message; err.style.display = 'block'; }
     } finally {
-      if (!aborted) { btn.disabled = false; btn.innerHTML = 'Recherche'; loadingAbort = null; }
+      if (!aborted) { btn.disabled = false; btn.innerHTML = 'Charger'; loadingAbort = null; }
     }
   }
 
