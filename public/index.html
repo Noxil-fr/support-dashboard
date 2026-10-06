@@ -61,8 +61,8 @@
   .load-btn:hover { background: #388bfd; }
   .load-btn:disabled { background: #1c3a6b; color: #6e7681; cursor: not-allowed; }
   .filter-info { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-  .filter-count { font-size: 12px; color: #8b949e; white-space: nowrap; }
-  .filter-raw { font-size: 12px; color: #3d444d; white-space: nowrap; }
+  .filter-count { font-size: 12px; color: #cdd9e5; font-weight: 600; white-space: nowrap; }
+  .filter-raw { font-size: 11px; font-weight: 700; color: #58a6ff; background: #0c1e3a; border: 1px solid #1a3a6b; border-radius: 10px; padding: 3px 10px; white-space: nowrap; }
   .col-panel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 100; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 0; min-width: 190px; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
   .col-panel.hidden { display: none; }
   .col-panel-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6e7681; padding: 2px 14px 8px; border-bottom: 1px solid #21262d; margin-bottom: 4px; }
@@ -1328,7 +1328,7 @@
           const msg = JSON.parse(line);
           if (msg.type === 'progress') {
             btn.innerHTML = `<span class="spinner"></span>${msg.count} chargés…`;
-            document.getElementById('jira-raw-count').textContent = `${msg.count} chargés`;
+            document.getElementById('jira-raw-count').textContent = `${msg.count} chargés…`;
             document.getElementById('jira-stats').style.display = 'flex';
             document.getElementById('jira-stats').style.flexDirection = 'row-reverse';
           } else if (msg.type === 'done') {
@@ -1345,7 +1345,7 @@
       all = parseIssues(issues, domain);
       finalizeLoad();
 
-      document.getElementById('jira-raw-count').textContent = `${all.length} chargés`;
+      document.getElementById('jira-raw-count').textContent = `${all.length} chargés au total`;
       render();
     } catch(e) {
       if (!aborted) { err.textContent = '⚠ ' + e.message; err.style.display = 'block'; }
