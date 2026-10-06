@@ -1375,16 +1375,20 @@
     const listForClients  = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr) && matchesVersion(b) && matchesFixVersion(b));
     const listForTechs    = all.filter(b => baseFilter(b) && matchesVersion(b) && matchesFixVersion(b) && matchesClient(b));
 
-    let list = listForTechs.filter(b => (!fr || b.reporter === fr) && (!filterStatus || filterStatus.includes(b.status))).sort((a, b) => {
+    const listForStats = listForTechs.filter(b => (!fr || b.reporter === fr));
+
+    let list = listForStats.filter(b => (!filterStatus || filterStatus.includes(b.status))).sort((a, b) => {
       let va = a[sortCol] || '', vb = b[sortCol] || '';
       if (sortCol === 'created') { va = new Date(va); vb = new Date(vb); }
       else { va = va.toLowerCase(); vb = vb.toLowerCase(); }
       return sortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
     });
 
-    const total = list.length;
+    // Les tuiles de statut sont calculées sur listForStats (non filtré par le statut
+    // sélectionné), pour que cliquer un statut ne fasse pas disparaître les autres compteurs.
+    const total = listForStats.length;
     const pct   = n => total ? Math.round(n / total * 100) + '%' : '–';
-    const by    = s => list.filter(b => b.status === s).length;
+    const by    = s => listForStats.filter(b => b.status === s).length;
 
     const setS = (id, pid, n) => {
       document.getElementById(id).textContent = n;
@@ -1520,8 +1524,8 @@
     updateBadge('badge-fixversion', 'badge-fixversion-name', document.getElementById('f-fixversion').value);
     updateBadge('badge-client',     'badge-client-name',     document.getElementById('f-client').value);
 
-    document.getElementById('jira-count').textContent = `${total} ticket${total > 1 ? 's' : ''}`;
-    document.getElementById('jira-empty').style.display = total ? 'none' : 'flex';
+    document.getElementById('jira-count').textContent = `${list.length} ticket${list.length > 1 ? 's' : ''}`;
+    document.getElementById('jira-empty').style.display = list.length ? 'none' : 'flex';
     applyColumns();
 
     document.getElementById('tbody').innerHTML = list.map(b => {
