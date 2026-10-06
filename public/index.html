@@ -1177,6 +1177,13 @@
     const sel = document.getElementById('f-reporter');
     sel.innerHTML = '<option value="">Tous rapporteurs</option>'
       + reporters.map(r => `<option value="${r}">${r}</option>`).join('');
+
+    const presentClients = [...new Set(all.flatMap(b => b.client && b.client !== '-' ? b.client.split(', ').map(c => c.trim()) : []))].sort();
+    const selC = document.getElementById('f-client');
+    selC.innerHTML = '<option value="">Tous clients</option>'
+      + presentClients.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('')
+      + '<option value="Sans client">Sans client</option>';
+
     buildVersionOptions();
   }
 
