@@ -1593,7 +1593,7 @@
     updateBadge('badge-fixversion', 'badge-fixversion-name', document.getElementById('f-fixversion').value);
     updateBadge('badge-client',     'badge-client-name',     document.getElementById('f-client').value);
 
-    document.getElementById('jira-count').textContent = `${list.length} ticket${list.length > 1 ? 's' : ''}`;
+    document.getElementById('jira-count').textContent = `${list.length} ticket${list.length > 1 ? 's' : ''} affiché${list.length > 1 ? 's' : ''}`;
     document.getElementById('jira-empty').style.display = list.length ? 'none' : 'flex';
     applyColumns();
 
