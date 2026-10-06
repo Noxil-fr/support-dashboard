@@ -70,6 +70,8 @@
   #badge-version:hover { background: #3a1018; border-color: #f85149; }
   #badge-fixversion { background: #0d2218; border-color: #1a5c30; color: #3fb950; }
   #badge-fixversion:hover { background: #0a1f14; border-color: #3fb950; }
+  #badge-client { background: #2a1d0d; border-color: #6b4a1a; color: #e3a96a; }
+  #badge-client:hover { background: #33230f; border-color: #e3a96a; }
   .filter-badge.visible { display: inline-flex; }
   .filter-badge-x { color: #6e7681; font-size: 14px; line-height: 1; margin-left: 2px; }
   .ql-sep { width: 1px; height: 18px; background: #21262d; }
@@ -125,8 +127,10 @@
   .side-tab:hover:not(.active) { color: #8b949e; background: #0f1318; }
   #side-tab-techs    { color: #5b93c4; }
   #side-tab-versions { color: #5bb98c; }
+  #side-tab-clients  { color: #c79a5f; }
   #side-tab-techs.active    { color: #79c0ff; background: #0d2a45; border-bottom-color: #58a6ff; }
   #side-tab-versions.active { color: #7ee8a2; background: #0a2d1a; border-bottom-color: #3fb950; }
+  #side-tab-clients.active  { color: #e3a96a; background: #2a1d0d; border-bottom-color: #e3a96a; }
   .side-pane { display: none; flex: 1; flex-direction: column; overflow-y: auto; background: #161b22; }
   .side-pane.active { display: flex; }
   .ver-row { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid #21262d; background: #161b22; overflow: hidden; transition: background .1s; }
@@ -339,10 +343,12 @@
       <span class="filter-badge" id="badge-reporter" onclick="clearFilter('reporter')" title="Effacer le filtre rapporteur"><span id="badge-reporter-name"></span><span class="filter-badge-x">×</span></span>
       <span class="filter-badge" id="badge-version"    onclick="clearFilter('version')"    title="Effacer le filtre version affectée"><span id="badge-version-name"></span><span class="filter-badge-x">×</span></span>
       <span class="filter-badge" id="badge-fixversion" onclick="clearFilter('fixversion')" title="Effacer le filtre version corrigée"><span id="badge-fixversion-name"></span><span class="filter-badge-x">×</span></span>
+      <span class="filter-badge" id="badge-client"     onclick="clearFilter('client')"      title="Effacer le filtre client"><span id="badge-client-name"></span><span class="filter-badge-x">×</span></span>
       <span class="filter-badge" id="badge-status"    onclick="setStatusFilter(null,null)" title="Effacer le filtre statut"><span id="badge-status-name"></span><span class="filter-badge-x">×</span></span>
       <select id="f-reporter" onchange="render()" style="display:none"><option value="">Tous rapporteurs</option></select>
       <select id="f-version"    onchange="render()" style="display:none"><option value="">Toutes versions</option></select>
       <select id="f-fixversion" onchange="render()" style="display:none"><option value="">Toutes versions corrigées</option></select>
+      <select id="f-client" onchange="render()" style="display:none"><option value="">Tous clients</option></select>
       <div class="filter-info">
         <span class="filter-count" id="jira-count"></span>
         <span class="filter-raw" id="jira-raw-count"></span>
@@ -370,6 +376,7 @@
         <div class="side-tabs">
           <button class="side-tab active" id="side-tab-techs" onclick="switchSidePane('techs')">ACTO</button>
           <button class="side-tab" id="side-tab-versions" onclick="switchSidePane('versions')">Versions</button>
+          <button class="side-tab" id="side-tab-clients" onclick="switchSidePane('clients')">Clients</button>
         </div>
         <!-- Pane techniciens -->
         <div class="side-pane active" id="side-pane-techs">
@@ -407,6 +414,10 @@
           <div class="ver-subpane" id="ver-subpane-fixed">
             <div id="fixversions-list"><div class="ver-empty">Chargez des données pour voir les versions.</div></div>
           </div>
+        </div>
+        <!-- Pane clients -->
+        <div class="side-pane" id="side-pane-clients">
+          <div id="client-list"><div class="ver-empty">Chargez des données pour voir les clients.</div></div>
         </div>
       </div>
 
@@ -889,6 +900,12 @@
     render();
   }
 
+  function filterByClient(name) {
+    const sel = document.getElementById('f-client');
+    sel.value = (sel.value === name) ? '' : name;
+    render();
+  }
+
   const ALLOWED_REPORTERS = [
     'Fabrice CIROT','Christophe MORLEGHEM','Sophie DUPONT','Jeyson ADELLE',
     'Freddy KIFFER','Antoine LANCELOT','Raphael RIGAUD','Hanh NGUYEN',
@@ -1319,7 +1336,13 @@
     const fr     = document.getElementById('f-reporter').value;
     const vf     = document.getElementById('f-version').value;
     const vfx    = document.getElementById('f-fixversion').value;
+    const cf     = document.getElementById('f-client').value;
 
+    const matchesClient = b => {
+      if (!cf) return true;
+      if (cf === 'Sans client') return !b.client || b.client === '-';
+      return !!b.client && b.client !== '-' && b.client.split(', ').includes(cf);
+    };
     const matchesVersion = b => {
       if (!vf) return true;
       if (vf === 'Sans version') return !b.versions || b.versions === '-';
@@ -1336,9 +1359,10 @@
       (lastLoadWasAdvanced || reporterScope !== 'icar' || b.product.toLowerCase().includes('icar')) &&
       (!search || b.key.toLowerCase().includes(search) || b.summary.toLowerCase().includes(search) || b.reporter.toLowerCase().includes(search) || b.product.toLowerCase().includes(search));
 
-    const listForVersions    = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr));
-    const listForFixVersions = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr) && matchesVersion(b));
-    const listForTechs    = all.filter(b => baseFilter(b) && matchesVersion(b) && matchesFixVersion(b));
+    const listForVersions    = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr) && matchesClient(b));
+    const listForFixVersions = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr) && matchesClient(b) && matchesVersion(b));
+    const listForClients  = all.filter(b => baseFilter(b) && (!fr || b.reporter === fr) && matchesVersion(b) && matchesFixVersion(b));
+    const listForTechs    = all.filter(b => baseFilter(b) && matchesVersion(b) && matchesFixVersion(b) && matchesClient(b));
 
     let list = listForTechs.filter(b => (!fr || b.reporter === fr) && (!filterStatus || filterStatus.includes(b.status))).sort((a, b) => {
       let va = a[sortCol] || '', vb = b[sortCol] || '';
@@ -1388,6 +1412,30 @@
           <span class="tech-row-count">${count}</span>
         </div>`;
       }).join('');
+
+    // Compteur par client
+    const clientCounts = {};
+    listForClients.forEach(b => {
+      const cls = b.client && b.client !== '-' ? b.client.split(', ') : ['Sans client'];
+      cls.forEach(c => { const t = c.trim(); clientCounts[t] = (clientCounts[t] || 0) + 1; });
+    });
+    const clientEntries = Object.entries(clientCounts).sort((a, b) => {
+      if (a[0] === 'Sans client') return 1;
+      if (b[0] === 'Sans client') return -1;
+      return b[1] - a[1];
+    });
+    const maxClientCount = Math.max(1, ...clientEntries.filter(([n]) => n !== 'Sans client').map(([, c]) => c));
+    document.getElementById('client-list').innerHTML = clientEntries.length
+      ? clientEntries.map(([name, count]) => {
+          const barWidth = name === 'Sans client' ? 0 : Math.round(count / maxClientCount * 100);
+          const selected = cf === name ? ' selected' : '';
+          return `<div class="tech-row${selected}" data-name="${escHtml(name)}" onclick="filterByClient(this.dataset.name)">
+            <div class="tech-row-bar" style="width:${barWidth}%"></div>
+            <span class="tech-row-name">${escHtml(name)}</span>
+            <span class="tech-row-count">${count}</span>
+          </div>`;
+        }).join('')
+      : '<div class="ver-empty">Aucun client trouvé.</div>';
 
     // Compteur par version — groupé avec détail (indépendant du filtre de version en cours)
     const verCounts = {};
@@ -1459,6 +1507,7 @@
     updateBadge('badge-reporter',   'badge-reporter-name',   document.getElementById('f-reporter').value);
     updateBadge('badge-version',    'badge-version-name',    document.getElementById('f-version').value);
     updateBadge('badge-fixversion', 'badge-fixversion-name', document.getElementById('f-fixversion').value);
+    updateBadge('badge-client',     'badge-client-name',     document.getElementById('f-client').value);
 
     document.getElementById('jira-count').textContent = `${total} ticket${total > 1 ? 's' : ''}`;
     document.getElementById('jira-empty').style.display = total ? 'none' : 'flex';
