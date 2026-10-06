@@ -89,7 +89,7 @@ async function resolveStatusIds(domain, auth, headers, names) {
 app.get('/api/bugs', async (req, res) => {
   const {
     domain, email, token, project, period, date_from, date_to, all_reporters,
-    statuses, assignee_ids, reporter_ids, versions, fixversions, clients
+    statuses, assignee_ids, reporter_ids, versions, fixversions, clients, products
   } = req.query;
 
   if (!domain || !email || !token) {
@@ -116,6 +116,7 @@ app.get('/api/bugs', async (req, res) => {
     if (versions)     conditions.push(`affectedVersion IN (${jqlList(versions.split(','))})`);
     if (fixversions)  conditions.push(`fixVersion IN (${jqlList(fixversions.split(','))})`);
     if (clients)      conditions.push(`cf[10263] IN (${jqlList(clients.split(','))})`);
+    if (products)     conditions.push(`cf[10136] IN (${jqlList(products.split(','))})`);
     if (project) conditions.push(`project = "${project}"`);
     if (date_from) {
       conditions.push(`created >= "${date_from}"`);

@@ -274,6 +274,7 @@
   .pf-accent-blue   { border-top-color: #58a6ff; }
   .pf-accent-purple { border-top-color: #a371f7; }
   .pf-accent-orange { border-top-color: #e3a96a; }
+  .pf-accent-cyan   { border-top-color: #22d3ee; }
   .pf-accent-red    { border-top-color: #f85149; }
   .pf-accent-green  { border-top-color: #3fb950; }
   .pf-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #8b949e; padding: 10px 14px 9px; border-bottom: 1px solid #21262d; display: flex; align-items: center; justify-content: space-between; }
@@ -281,6 +282,7 @@
   .pf-accent-blue   .pf-section-count { color: #58a6ff; }
   .pf-accent-purple .pf-section-count { color: #a371f7; }
   .pf-accent-orange .pf-section-count { color: #e3a96a; }
+  .pf-accent-cyan   .pf-section-count { color: #22d3ee; }
   .pf-accent-red    .pf-section-count { color: #f85149; }
   .pf-accent-green  .pf-section-count { color: #3fb950; }
   .pf-search { padding: 9px 12px; border-bottom: 1px solid #21262d; }
@@ -594,6 +596,11 @@
             <div class="pf-section-title"><span>Client</span><span class="pf-section-count" id="pf-count-client"></span></div>
             <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('client', this.value)"></div>
             <div class="pf-list" id="pf-list-client"><div class="pf-loading">Chargement…</div></div>
+          </div>
+          <div class="pf-section pf-accent-cyan">
+            <div class="pf-section-title"><span>Produit</span><span class="pf-section-count" id="pf-count-product"></span></div>
+            <div class="pf-search"><input type="text" placeholder="Rechercher…" oninput="pfFilterList('product', this.value)"></div>
+            <div class="pf-list" id="pf-list-product"><div class="pf-loading">Chargement…</div></div>
           </div>
           <div class="pf-section pf-accent-red">
             <div class="pf-section-title"><span>Version affectée</span><span class="pf-section-count" id="pf-count-version"></span></div>
@@ -1033,11 +1040,12 @@
       const raw = localStorage.getItem(KNOWN_VALUES_KEY);
       if (raw) return JSON.parse(raw);
     } catch {}
-    return { reporters: [], assignees: [], versions: [], fixversions: [], clients: [] };
+    return { reporters: [], assignees: [], versions: [], fixversions: [], clients: [], products: [] };
   }
 
   let knownValues = loadKnownValues();
-  if (!knownValues.clients) knownValues.clients = [];
+  if (!knownValues.clients)  knownValues.clients = [];
+  if (!knownValues.products) knownValues.products = [];
 
   function mergeKnownValues() {
     // Sets pour une dédup en O(1) au lieu d'un .includes()/.some() en O(n) par ticket,
@@ -1047,6 +1055,7 @@
     const versionSet    = new Set(knownValues.versions);
     const fixversionSet = new Set(knownValues.fixversions);
     const clientSet     = new Set(knownValues.clients);
+    const productSet    = new Set(knownValues.products);
 
     const addNamed = (idSet, arr, id, name) => { if (id && name && name !== '-' && !idSet.has(id)) { idSet.add(id); arr.push({ id, name }); } };
     const addPlain = (set, arr, val) => { if (val && !set.has(val)) { set.add(val); arr.push(val); } };
@@ -1057,16 +1066,18 @@
       (b.versions    !== '-' ? b.versions.split(', ')    : []).forEach(v => addPlain(versionSet,    knownValues.versions,    v.trim()));
       (b.fixversions !== '-' ? b.fixversions.split(', ') : []).forEach(v => addPlain(fixversionSet, knownValues.fixversions, v.trim()));
       (b.client      !== '-' ? b.client.split(', ')      : []).forEach(v => addPlain(clientSet,     knownValues.clients,     v.trim()));
+      addPlain(productSet, knownValues.products, b.product !== '-' ? b.product : null);
     });
     knownValues.reporters.sort((a, b) => a.name.localeCompare(b.name));
     knownValues.assignees.sort((a, b) => a.name.localeCompare(b.name));
     knownValues.versions.sort((a, b) => cmpVer(b, a));
     knownValues.fixversions.sort((a, b) => cmpVer(b, a));
     knownValues.clients.sort((a, b) => a.localeCompare(b));
+    knownValues.products.sort((a, b) => a.localeCompare(b));
     try { localStorage.setItem(KNOWN_VALUES_KEY, JSON.stringify(knownValues)); } catch {}
   }
 
-  let preFilters = { status: [], reporter: [], assignee: [], version: [], fixversion: [], client: [] };
+  let preFilters = { status: [], reporter: [], assignee: [], version: [], fixversion: [], client: [], product: [] };
   let lastLoadWasAdvanced = false;
 
   function pfCount() {
@@ -1150,10 +1161,10 @@
   }
 
   function pfReset() {
-    preFilters = { status: [], reporter: [], assignee: [], version: [], fixversion: [], client: [] };
+    preFilters = { status: [], reporter: [], assignee: [], version: [], fixversion: [], client: [], product: [] };
     document.querySelectorAll('#overlay-prefilters input[type=checkbox]').forEach(c => c.checked = false);
     document.querySelectorAll('#overlay-prefilters .pf-pill').forEach(p => p.classList.remove('active'));
-    ['status','reporter','assignee','version','fixversion','client'].forEach(updatePfCount);
+    ['status','reporter','assignee','version','fixversion','client','product'].forEach(updatePfCount);
     updatePfButton();
   }
 
@@ -1166,19 +1177,21 @@
     renderPfList('reporter',    knownValues.reporters.map(r => ({ value: r.id, label: r.name })), notLoadedMsg);
     renderPfList('assignee',    knownValues.assignees.map(a => ({ value: a.id, label: a.name })), notLoadedMsg);
     renderPfList('client',      knownValues.clients.map(c => ({ value: c, label: c })), notLoadedMsg);
+    renderPfList('product',     knownValues.products.map(p => ({ value: p, label: p })), notLoadedMsg);
     renderPfGroupedList('version',     knownValues.versions.map(v => ({ value: v, label: v })), notLoadedMsg);
     renderPfGroupedList('fixversion',  knownValues.fixversions.map(v => ({ value: v, label: v })), notLoadedMsg);
   }
 
   function pfPurgeKnownValues() {
-    if (!confirm('Purger les listes de rapporteurs, assignés, clients et versions mémorisées ? Elles se reconstruiront au prochain chargement de tickets.')) return;
-    knownValues = { reporters: [], assignees: [], versions: [], fixversions: [], clients: [] };
+    if (!confirm('Purger les listes de rapporteurs, assignés, clients, produits et versions mémorisées ? Elles se reconstruiront au prochain chargement de tickets.')) return;
+    knownValues = { reporters: [], assignees: [], versions: [], fixversions: [], clients: [], products: [] };
     try { localStorage.removeItem(KNOWN_VALUES_KEY); } catch {}
     preFilters.reporter = [];
     preFilters.assignee = [];
     preFilters.version = [];
     preFilters.fixversion = [];
     preFilters.client = [];
+    preFilters.product = [];
     renderPfAllLists();
     updatePfButton();
   }
@@ -1250,6 +1263,7 @@
     if (preFilters.reporter.length)   parts.push(`<b>Rapporteur</b> ${escHtml(preFilters.reporter.map(id => nameOf(knownValues.reporters, id)).join(', '))}`);
     if (preFilters.assignee.length)   parts.push(`<b>Assigné</b> ${escHtml(preFilters.assignee.map(id => nameOf(knownValues.assignees, id)).join(', '))}`);
     if (preFilters.client.length)     parts.push(`<b>Client</b> ${escHtml(preFilters.client.join(', '))}`);
+    if (preFilters.product.length)    parts.push(`<b>Produit</b> ${escHtml(preFilters.product.join(', '))}`);
     if (preFilters.version.length)    parts.push(`<b>Version affectée</b> ${escHtml(preFilters.version.join(', '))}`);
     if (preFilters.fixversion.length) parts.push(`<b>Version corrigée</b> ${escHtml(preFilters.fixversion.join(', '))}`);
     document.getElementById('pf-active-summary').innerHTML = `Recherche avancée — ${parts.join(' &nbsp;·&nbsp; ')}`;
@@ -1303,6 +1317,7 @@
     if (preFilters.version.length)    params.set('versions', preFilters.version.join(','));
     if (preFilters.fixversion.length) params.set('fixversions', preFilters.fixversion.join(','));
     if (preFilters.client.length)     params.set('clients', preFilters.client.join(','));
+    if (preFilters.product.length)    params.set('products', preFilters.product.join(','));
 
     try {
       const res = await fetch(`/api/bugs?${params}`, { signal: controller.signal });
