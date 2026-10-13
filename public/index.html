@@ -528,6 +528,19 @@
   </div>
 </div>
 
+<!-- ══════════════════════ MODAL ENREGISTRER RECHERCHE ═════════════════════ -->
+<div class="overlay hidden" id="overlay-save-search">
+  <div class="modal">
+    <h2>💾 Enregistrer la recherche</h2>
+    <p>Donne-lui un nom pour la retrouver facilement plus tard.</p>
+    <input type="text" id="save-search-name" placeholder="Ex. Backlog I'CAR DMS" maxlength="60" onkeydown="if(event.key==='Enter') confirmSaveSearch()">
+    <div class="modal-footer">
+      <button class="secondary" onclick="closeSaveSearchModal()">Annuler</button>
+      <button class="primary" onclick="confirmSaveSearch()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════ MODAL PIN ══════════════════════════════════════── -->
 <div class="overlay hidden" id="overlay-pin">
   <div class="modal">
@@ -960,19 +973,31 @@
     panel.innerHTML = `
       <div class="col-panel-title">Recherches enregistrées</div>
       ${items}
-      <div class="col-item" onclick="saveCurrentSearch()" style="color:#58a6ff;cursor:pointer;margin-top:4px;border-top:1px solid #21262d;padding-top:9px">
+      <div class="col-item" onclick="openSaveSearchModal()" style="color:#58a6ff;cursor:pointer;margin-top:4px;border-top:1px solid #21262d;padding-top:9px">
         <span>＋ Enregistrer la recherche actuelle</span>
       </div>`;
   }
 
-  function saveCurrentSearch() {
-    const name = prompt('Nom de cette recherche :');
-    if (!name || !name.trim()) return;
+  function openSaveSearchModal() {
+    document.getElementById('saved-panel').classList.add('hidden');
+    const input = document.getElementById('save-search-name');
+    input.value = '';
+    document.getElementById('overlay-save-search').classList.remove('hidden');
+    setTimeout(() => input.focus(), 0);
+  }
+
+  function closeSaveSearchModal() {
+    document.getElementById('overlay-save-search').classList.add('hidden');
+  }
+
+  function confirmSaveSearch() {
+    const name = document.getElementById('save-search-name').value.trim();
+    if (!name) return;
     const advanced = pfCount() > 0;
     const list = loadSavedSearches();
     list.unshift({
       id: Date.now().toString(),
-      name: name.trim(),
+      name,
       search: document.getElementById('search').value,
       advanced,
       period: document.getElementById('period').value,
@@ -982,7 +1007,7 @@
       preFilters: advanced ? JSON.parse(JSON.stringify(preFilters)) : null,
     });
     saveSavedSearchesList(list);
-    buildSavedPanel();
+    closeSaveSearchModal();
   }
 
   function applySavedSearch(id) {
