@@ -65,6 +65,8 @@
   .filter-raw { font-size: 12px; font-weight: 600; color: #58a6ff; white-space: nowrap; }
   .col-panel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 100; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 0; min-width: 190px; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
   .col-panel.hidden { display: none; }
+  .saved-delete { color: #f85149; font-size: 16px; font-weight: 700; line-height: 1; padding: 2px 6px; border-radius: 4px; cursor: pointer; flex-shrink: 0; transition: background .15s, color .15s; }
+  .saved-delete:hover { background: #2d1117; color: #ff7b72; }
   .col-panel-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6e7681; padding: 2px 14px 8px; border-bottom: 1px solid #21262d; margin-bottom: 4px; }
   .col-item { display: flex; align-items: center; gap: 8px; padding: 5px 14px; cursor: pointer; transition: background .1s; }
   .col-item:hover { background: #1c2128; }
@@ -967,7 +969,7 @@
       ? list.map(s => `
         <div class="col-item" style="justify-content:space-between" onclick="applySavedSearch('${s.id}')">
           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.name)}</span>
-          <span onclick="event.stopPropagation(); deleteSavedSearch('${s.id}')" style="color:#6e7681;padding-left:8px" title="Supprimer">×</span>
+          <span class="saved-delete" onclick="event.stopPropagation(); deleteSavedSearch('${s.id}', '${escHtml(s.name).replace(/'/g, "\\'")}')" title="Supprimer">×</span>
         </div>`).join('')
       : '<div class="col-item" style="color:#6e7681;cursor:default">Aucune recherche enregistrée</div>';
     panel.innerHTML = `
@@ -1036,7 +1038,8 @@
     loadBugs();
   }
 
-  function deleteSavedSearch(id) {
+  function deleteSavedSearch(id, name) {
+    if (!confirm(`Supprimer la recherche « ${name} » ?`)) return;
     const list = loadSavedSearches().filter(x => x.id !== id);
     saveSavedSearchesList(list);
     buildSavedPanel();
