@@ -365,6 +365,12 @@
       <button class="load-btn" onclick="openPreFilters()"><span id="pf-btn-label">🔍 Recherche avancée</span></button>
       <div class="filter-sep"></div>
       <div style="position:relative">
+        <button class="load-btn" onclick="toggleSavedPanel()" id="saved-btn">💾 Recherches</button>
+        <div id="saved-panel" class="col-panel hidden">
+        </div>
+      </div>
+      <div class="filter-sep"></div>
+      <div style="position:relative">
         <button class="load-btn" onclick="toggleColPanel()" id="col-btn" style="background:#1e1232;border:1px solid #5c3a9a;white-space:nowrap">Modifier l'affichage</button>
         <div id="col-panel" class="col-panel hidden">
         </div>
@@ -921,6 +927,96 @@
     applyColumns();
   }
 
+  const SAVED_SEARCHES_KEY = 'saved_searches';
+
+  function loadSavedSearches() {
+    try { return JSON.parse(localStorage.getItem(SAVED_SEARCHES_KEY) || '[]'); } catch { return []; }
+  }
+
+  function saveSavedSearchesList(list) {
+    try { localStorage.setItem(SAVED_SEARCHES_KEY, JSON.stringify(list)); } catch {}
+  }
+
+  function toggleSavedPanel() {
+    const panel = document.getElementById('saved-panel');
+    if (panel.classList.contains('hidden')) {
+      buildSavedPanel();
+      panel.classList.remove('hidden');
+    } else {
+      panel.classList.add('hidden');
+    }
+  }
+
+  function buildSavedPanel() {
+    const panel = document.getElementById('saved-panel');
+    const list = loadSavedSearches();
+    const items = list.length
+      ? list.map(s => `
+        <div class="col-item" style="justify-content:space-between" onclick="applySavedSearch('${s.id}')">
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.name)}</span>
+          <span onclick="event.stopPropagation(); deleteSavedSearch('${s.id}')" style="color:#6e7681;padding-left:8px" title="Supprimer">×</span>
+        </div>`).join('')
+      : '<div class="col-item" style="color:#6e7681;cursor:default">Aucune recherche enregistrée</div>';
+    panel.innerHTML = `
+      <div class="col-panel-title">Recherches enregistrées</div>
+      ${items}
+      <div class="col-item" onclick="saveCurrentSearch()" style="color:#58a6ff;cursor:pointer;margin-top:4px;border-top:1px solid #21262d;padding-top:9px">
+        <span>＋ Enregistrer la recherche actuelle</span>
+      </div>`;
+  }
+
+  function saveCurrentSearch() {
+    const name = prompt('Nom de cette recherche :');
+    if (!name || !name.trim()) return;
+    const advanced = pfCount() > 0;
+    const list = loadSavedSearches();
+    list.unshift({
+      id: Date.now().toString(),
+      name: name.trim(),
+      search: document.getElementById('search').value,
+      advanced,
+      period: document.getElementById('period').value,
+      dateFrom: document.getElementById('date-from').value,
+      dateTo: document.getElementById('date-to').value,
+      reporterScope,
+      preFilters: advanced ? JSON.parse(JSON.stringify(preFilters)) : null,
+    });
+    saveSavedSearchesList(list);
+    buildSavedPanel();
+  }
+
+  function applySavedSearch(id) {
+    const s = loadSavedSearches().find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('saved-panel').classList.add('hidden');
+
+    document.getElementById('search').value = s.search || '';
+    document.getElementById('period').value = s.period || '7';
+    toggleCustomDates();
+    if (s.period === 'custom') {
+      document.getElementById('date-from').value = s.dateFrom || '';
+      document.getElementById('date-to').value = s.dateTo || '';
+    }
+    if (s.reporterScope && s.reporterScope !== reporterScope) {
+      reporterScope = s.reporterScope;
+      localStorage.setItem('reporter_scope', reporterScope);
+    }
+    document.getElementById('team-scope').value = reporterScope;
+
+    preFilters = (s.advanced && s.preFilters)
+      ? JSON.parse(JSON.stringify(s.preFilters))
+      : { status: [], reporter: [], assignee: [], version: [], fixversion: [], client: [], product: [] };
+    updatePfButton();
+
+    loadBugs();
+  }
+
+  function deleteSavedSearch(id) {
+    const list = loadSavedSearches().filter(x => x.id !== id);
+    saveSavedSearchesList(list);
+    buildSavedPanel();
+  }
+
   function setReporterScope(scope) {
     if (reporterScope === scope) return;
     reporterScope = scope;
@@ -939,6 +1035,10 @@
     const panel = document.getElementById('col-panel');
     if (panel && !panel.classList.contains('hidden') && !e.target.closest('#col-panel') && !e.target.closest('#col-btn')) {
       panel.classList.add('hidden');
+    }
+    const savedPanel = document.getElementById('saved-panel');
+    if (savedPanel && !savedPanel.classList.contains('hidden') && !e.target.closest('#saved-panel') && !e.target.closest('#saved-btn')) {
+      savedPanel.classList.add('hidden');
     }
   });
 
